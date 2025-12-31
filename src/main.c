@@ -8,7 +8,7 @@
    #define GCC "riscv-none-elf-gcc"
    #define OBJCOPY "riscv-none-elf-objcopy"
 #else 
-   #define SEP " ; "
+   #define SH_SEP " ; "
    #define GCC "riscv64-elf-gcc"
    #define OBJCOPY "riscv-elf-objcopy"
 #endif
