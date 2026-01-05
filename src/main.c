@@ -1,11 +1,12 @@
+#include "./alu.h"
+#include "./control_decoder.h"
+#include "./instr_fields.h"
+#include "./register_bank.h"
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-#include "./instr_fields.h"
-#include "./register_bank.h"
 
 #ifdef _WIN32
 #define SH_SEP " && "
@@ -43,12 +44,12 @@ size_t load_instructions(char *file_path) {
     perror("Error opening file");
     return 0;
   }
-  int instr_count = fread(instr_mem, sizeof(uint32_t), 1024, file);
-  printf("\nLoaded %d instructions into instruction memory\n", instr_count);
+  size_t instr_count = fread(instr_mem, sizeof(uint32_t), 1024, file);
+  printf("\nLoaded %zu instructions into instruction memory\n", instr_count);
   fclose(file);
   return instr_count;
 }
-static inline uint32_t fetch_next_instruction() { return *(instr_mem + pc); }
+static inline uint32_t fetch_next_instruction() { return instr_mem[pc >> 2]; }
 
 int main(int argc, char *args[]) {
   if (argc == 0) {
@@ -61,10 +62,19 @@ int main(int argc, char *args[]) {
 
   for (; pc < (instr_count * 4); pc += 4) {
     uint32_t instr = fetch_next_instruction();
+
+    control_signals ctrl = get_control_signals(
+        get_opcode(instr), get_funct3(instr), get_funct7(instr));
+
     send_register_bank_input(get_rs1(instr), get_rs2(instr), get_rd(instr),
-                             true);
+                             ctrl.rd_we);
+
+    uint32_t imm = get_i_imm(instr);
     register_bank_output rb_out = get_register_bank_output();
-    int32_t alu_result = rb_out.rs1_data + rb_out.rs2_data;
+    uint32_t value1 = rb_out.rs1_data;
+    uint32_t value2 = ctrl.alu_src_imm ? imm : rb_out.rs1_data;
+    int32_t alu_result = execute_alu(value1, value2, ctrl.alu_op);
     rd_write(alu_result);
+    printf("\nInstruction finished: %08x\n", instr);
   }
 }
