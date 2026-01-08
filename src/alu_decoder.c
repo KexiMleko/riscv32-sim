@@ -1,6 +1,5 @@
 #include "alu_decoder.h"
 #include <stdint.h>
-#include <stdio.h>
 
 alu_op op_alu_decode(uint32_t funct3, uint32_t funct7) {
   switch ((funct7 << 3) | funct3) {

@@ -1,6 +1,7 @@
 #include "./control_decoder.h"
 #include "./alu_decoder.h"
 #include "./opcodes.h"
+#include "alu_ops.h"
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -29,12 +30,16 @@ control_signals get_control_signals(uint32_t opcode, uint32_t funct3,
     ctrl.rd_we = true;
     ctrl.mem_to_reg = true;
     ctrl.alu_src_imm = true;
+    ctrl.alu_op = ALU_ADD;
     break;
   case OPCODE_STORE:
     ctrl.alu_src_imm = true;
     ctrl.data_mem_we = true;
+    ctrl.alu_op = ALU_ADD;
     break;
   case OPCODE_LUI:
+      ctrl.rd_we=true;
+      ctrl.alu_src_imm=true;
     break;
   case OPCODE_SYSTEM:
     break;

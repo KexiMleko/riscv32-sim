@@ -74,7 +74,16 @@ int main(int argc, char *args[]) {
     uint32_t value1 = rb_out.rs1_data;
     uint32_t value2 = ctrl.alu_src_imm ? imm : rb_out.rs1_data;
     int32_t alu_result = execute_alu(value1, value2, ctrl.alu_op);
-    rd_write(alu_result);
+    if (ctrl.data_mem_we) {
+      data_mem[alu_result] = value1;
+    }
+    uint32_t reg_wr_data;
+    if (ctrl.mem_to_reg) {
+      reg_wr_data = data_mem[alu_result];
+    } else {
+      reg_wr_data = alu_result;
+    }
+    rd_write(reg_wr_data);
     printf("\nInstruction finished: %08x\n", instr);
   }
 }
