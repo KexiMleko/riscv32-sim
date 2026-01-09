@@ -28,7 +28,7 @@ alu_op op_alu_decode(uint32_t funct3, uint32_t funct7) {
   }
 }
 alu_op op_imm_alu_decode(uint32_t funct3, uint32_t funct7) {
-  switch ((funct7 << 3) | funct3) {
+  switch (funct3) {
   case 0x0:
     return ALU_ADD;
   case 0x1:
@@ -40,9 +40,11 @@ alu_op op_imm_alu_decode(uint32_t funct3, uint32_t funct7) {
   case 0x4:
     return ALU_XOR;
   case 0x5:
-    return ALU_SRL;
-  case (0x20 << 3) | 0x5:
-    return ALU_SRA;
+    if (funct7 == 0x20) {
+      return ALU_SRA;
+    } else {
+      return ALU_SRL;
+    }
   case 0x6:
     return ALU_OR;
   case 0x7:
