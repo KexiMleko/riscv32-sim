@@ -11,35 +11,46 @@ control_signals get_control_signals(uint32_t opcode, uint32_t funct3,
   switch (opcode) {
   case OPCODE_OP:
     ctrl.rd_we = true;
+    ctrl.imm_type = IMM_NONE;
     ctrl.alu_op = op_alu_decode(funct3, funct7);
     break;
   case OPCODE_OP_IMM:
     ctrl.rd_we = true;
     ctrl.alu_src_imm = true;
+    ctrl.imm_type = IMM_I;
     ctrl.alu_op = op_imm_alu_decode(funct3, funct7);
     break;
   case OPCODE_AUIPC:
+    ctrl.imm_type = IMM_U;
     break;
   case OPCODE_BRANCH:
+    ctrl.branch = true;
+    ctrl.imm_type = IMM_B;
+    ctrl.alu_op = ALU_NOP;
     break;
   case OPCODE_JAL:
+    ctrl.imm_type = IMM_J;
     break;
   case OPCODE_JALR:
+    ctrl.imm_type = IMM_I;
     break;
   case OPCODE_LOAD:
     ctrl.rd_we = true;
     ctrl.mem_to_reg = true;
     ctrl.alu_src_imm = true;
+    ctrl.imm_type = IMM_I;
     ctrl.alu_op = ALU_ADD;
     break;
   case OPCODE_STORE:
     ctrl.alu_src_imm = true;
     ctrl.data_mem_we = true;
+    ctrl.imm_type = IMM_S;
     ctrl.alu_op = ALU_ADD;
     break;
   case OPCODE_LUI:
-      ctrl.rd_we=true;
-      ctrl.alu_src_imm=true;
+    ctrl.rd_we = true;
+    ctrl.imm_type = IMM_U;
+    ctrl.alu_src_imm = true;
     break;
   case OPCODE_SYSTEM:
     break;
