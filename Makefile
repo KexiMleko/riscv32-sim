@@ -1,22 +1,29 @@
 CC := gcc
-CFLAGS := -Wall -Wextra -g
-TARGET := rvsim
+CFLAGS := -Wall -Wextra -g -I./src
+TARGET := build/rvsim
 
 SRCS := $(wildcard src/*.c)
-OBJS := $(SRCS:.c=.o)
+OBJS := $(patsubst src/%.c,build/%.o,$(SRCS))
+DEPS := $(OBJS:.o=.d)
+
+TSRC ?=branch.s
 
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^
 
-%.o: %.c
+build/%.o: src/%.c
+	@mkdir -p build
 	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
 
--include $(OBJS:.o=.d)
+-include $(DEPS)
 
-run: $(TARGET)
-	./$(TARGET)
+test: $(TARGET)
+ifndef TSRC
+	$(error TSRC variable is not set. Usage: make run TSRC=test.s)
+endif
+	./$(TARGET) ./tests/data/src/$(FSRC)
 
 clean:
-	rm -f $(OBJS) $(OBJS:.o=.d) $(TARGET)
+	rm -rf build/*
