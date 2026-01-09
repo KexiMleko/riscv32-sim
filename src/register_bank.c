@@ -25,6 +25,6 @@ void rd_write(uint32_t value) {
     if (r_bank.rd_addr == 0)
       return;
     gp_regs[r_bank.rd_addr] = value;
-    printf("\nWrite on x%d value: %d\n", r_bank.rd_addr, gp_regs[r_bank.rd_addr]);
+    printf("Write on x%d value: %d\n", r_bank.rd_addr, gp_regs[r_bank.rd_addr]);
   }
 }

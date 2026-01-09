@@ -29,10 +29,10 @@ uint32_t execute_alu(uint32_t value1, uint32_t value2, alu_op op) {
   case ALU_NOP:
     return 0;
   case ALU_INVALID:
-    fprintf(stderr, "Invalid ALU operation invoked");
+    fprintf(stderr, "Invalid ALU operation invoked\n");
     return 0;
   default:
-    fprintf(stderr, "Unkown ALU operation invoked");
+    fprintf(stderr, "Unkown ALU operation invoked\n");
     return 0;
   }
 }
