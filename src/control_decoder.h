@@ -1,8 +1,7 @@
 #include "./alu_ops.h"
+#include "imm_type.h"
 #include <stdbool.h>
 #include <stdint.h>
-
-typedef enum { IMM_NONE, IMM_I, IMM_S, IMM_B, IMM_U, IMM_J } imm_type_t;
 
 typedef struct {
   bool rd_we;

@@ -2,6 +2,7 @@
 #include "./alu_decoder.h"
 #include "./opcodes.h"
 #include "alu_ops.h"
+#include "imm_type.h"
 #include <stdbool.h>
 #include <stdint.h>
 
