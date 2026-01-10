@@ -23,7 +23,7 @@ test: $(TARGET)
 ifndef TSRC
 	$(error TSRC variable is not set. Usage: make run TSRC=test.s)
 endif
-	./$(TARGET) ./tests/data/src/$(FSRC)
+	./$(TARGET) ./tests/data/src/$(TSRC)
 
 clean:
 	rm -rf build/*
