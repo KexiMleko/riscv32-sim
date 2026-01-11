@@ -26,6 +26,9 @@ int main(int argc, char *args[]) {
   size_t instr_count = load_instructions(file_path, instr_mem);
 
   const uint32_t total_instr_size = instr_count * 4;
+
+  uint64_t clk_cycle = 0;
+
   while (pc < total_instr_size) {
     uint32_t next_pc = pc + 4;
     uint32_t instr = fetch_next_instruction();
@@ -42,28 +45,23 @@ int main(int argc, char *args[]) {
     uint32_t rs1 = rb_out.rs1_data;
     uint32_t rs2 = ctrl.alu_src_imm ? imm : rb_out.rs2_data;
 
-    if (ctrl.branch) {
-      if (eval_branch(rs1, rs2, get_funct3(instr))) {
-        next_pc = pc + imm;
-        printf("branching taken, pc is %d\n", pc);
-      } else {
-        printf("branching not taken, pc is %d\n", pc);
-      }
-    } else {
-
-      int32_t alu_result = execute_alu(rs1, rs2, ctrl.alu_op);
-
-      if (ctrl.data_mem_we) {
-        data_mem[alu_result] = rs1;
-      }
-      uint32_t reg_wr_data;
-      if (ctrl.mem_to_reg) {
-        reg_wr_data = data_mem[alu_result];
-      } else {
-        reg_wr_data = alu_result;
-      }
-      rd_write(reg_wr_data);
+    if (ctrl.branch && eval_branch(rs1, rs2, get_funct3(instr))) {
+      next_pc = pc + imm;
+      printf("branching taken, pc is %d\n", pc);
     }
+
+    int32_t alu_result = execute_alu(rs1, rs2, ctrl.alu_op);
+    if (ctrl.data_mem_we) {
+      data_mem[alu_result] = rs1;
+    }
+    uint32_t reg_wr_data;
+    if (ctrl.mem_to_reg) {
+      reg_wr_data = data_mem[alu_result];
+    } else {
+      reg_wr_data = alu_result;
+    }
+    rd_write(reg_wr_data);
     pc = next_pc;
+    clk_cycle++;
   }
 }
