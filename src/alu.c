@@ -15,11 +15,11 @@ uint32_t execute_alu(uint32_t value1, uint32_t value2, alu_op op) {
   case ALU_XOR:
     return value1 ^ value2;
   case ALU_SLL:
-    return value1 << value2;
+    return value1 << (value2 & 0x1F);
   case ALU_SRL:
-    return value1 >> value2;
+    return value1 >> (value2 & 0x1F);
   case ALU_SRA:
-    return (int32_t)value1 >> value2;
+    return (int32_t)value1 >> (value2 & 0x1F);
   case ALU_SLT:
     return ((int32_t)value1 < (int32_t)value2) ? 1 : 0;
   case ALU_SLTU:
