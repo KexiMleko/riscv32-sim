@@ -26,7 +26,6 @@ int main(int argc, char *args[]) {
   size_t instr_count = load_instructions(file_path, instr_mem);
 
   const uint32_t total_instr_size = instr_count * 4;
-
   uint64_t clk_cycle = 0;
 
   while (pc < total_instr_size) {

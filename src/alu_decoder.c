@@ -1,7 +1,7 @@
 #include "alu_decoder.h"
 #include <stdint.h>
 
-alu_op op_alu_decode(uint32_t funct3, uint32_t funct7) {
+alu_op_t op_alu_decode(uint32_t funct3, uint32_t funct7) {
   switch ((funct7 << 3) | funct3) {
   case (0x00 << 3) | 0x0:
     return ALU_ADD;
@@ -27,7 +27,7 @@ alu_op op_alu_decode(uint32_t funct3, uint32_t funct7) {
     return ALU_INVALID;
   }
 }
-alu_op op_imm_alu_decode(uint32_t funct3, uint32_t funct7) {
+alu_op_t op_imm_alu_decode(uint32_t funct3, uint32_t funct7) {
   switch (funct3) {
   case 0x0:
     return ALU_ADD;

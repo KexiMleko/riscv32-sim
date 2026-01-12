@@ -1,4 +1,4 @@
-#include "./alu_ops.h"
+#include "./alu_op.h"
 #include "imm_type.h"
 #include <stdbool.h>
 #include <stdint.h>
@@ -9,7 +9,7 @@ typedef struct {
   bool mem_to_reg;
   bool branch;
   bool alu_src_imm;
-  alu_op alu_op;
+  alu_op_t alu_op;
   imm_type_t imm_type;
 } control_signals;
 

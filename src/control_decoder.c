@@ -1,7 +1,7 @@
 #include "./control_decoder.h"
 #include "./alu_decoder.h"
-#include "./opcodes.h"
-#include "alu_ops.h"
+#include "./opcode.h"
+#include "alu_op.h"
 #include "imm_type.h"
 #include <stdbool.h>
 #include <stdint.h>

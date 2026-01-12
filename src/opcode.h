@@ -1,4 +1,4 @@
-enum opcode {
+typedef enum {
   OPCODE_OP = 0b0110011,
   OPCODE_OP_IMM = 0b0010011,
   OPCODE_LOAD = 0b0000011,
@@ -9,4 +9,4 @@ enum opcode {
   OPCODE_LUI = 0b0110111,
   OPCODE_AUIPC = 0b0010111,
   OPCODE_SYSTEM = 0b1110011
-};
+} opcode;

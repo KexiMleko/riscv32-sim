@@ -14,4 +14,4 @@ typedef enum {
   ALU_PASS,
   ALU_NOP,
   ALU_INVALID
-} alu_op;
+} alu_op_t;
