@@ -3,7 +3,7 @@
 #include "../imm_gen.h"
 #include "../instr_fields.h"
 #include "../pipe_regs.h"
-#include "../register_bank.h"
+#include "../regfile.h"
 #include <stdint.h>
 #include <stdio.h>
 
@@ -22,8 +22,7 @@ ID_EX instr_decode(IF_ID in) {
   uint32_t rd = get_rd(instr);
   control_signals ctrl = get_control_signals(opcode, funct3, funct7);
 
-  send_register_bank_input(rs1, rs2, rd, ctrl.rd_we);
-  register_bank_output rb_out = get_register_bank_output();
+  regfile_out rb_out = regfile_read(rs1, rs2);
   int32_t imm = generate_imm(instr, ctrl.imm_type);
 
   uint32_t next_pc = 0;
