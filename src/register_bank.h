@@ -14,7 +14,8 @@ typedef struct {
   bool rd_we;
 } register_bank;
 
-void send_register_bank_input(uint32_t rs1_addr, uint32_t rs2_addr, uint32_t rd_addr,
-                       bool rd_we);
+void send_register_bank_input(uint32_t rs1_addr, uint32_t rs2_addr,
+                              uint32_t rd_addr, bool rd_we);
 register_bank_output get_register_bank_output();
 void rd_write(uint32_t value);
+void rbank_write(uint32_t value, uint32_t rd_addr);

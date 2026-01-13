@@ -1,21 +1,22 @@
 #include "./alu.h"
-#include "./branch_ctrl.h"
-#include "./control_decoder.h"
-#include "./instr_fields.h"
+#include "./pipe_regs.h"
 #include "./prog_load.h"
-#include "./register_bank.h"
-#include "imm_gen.h"
+#include "./stages/execute_stage.c"
+#include "./stages/instr_decode_stage.c"
+#include "./stages/instr_fetch_stage.c"
+#include "./stages/memory_access_stage.c"
+#include "./stages/write_back_stage.c"
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
-uint32_t pc = 0;
+#define MAX_CLK_COUNT 5000
+uint32_t PC = 0;
 uint32_t instr_mem[1024] = {0};
 uint32_t data_mem[1024] = {0};
 
-static inline uint32_t fetch_next_instruction() { return instr_mem[pc >> 2]; }
+static inline uint32_t fetch_next_instruction() { return instr_mem[PC >> 2]; }
 int main(int argc, char *args[]) {
   if (argc == 0) {
     perror("Must provide path to the assembly file or a rv32i binary with "
@@ -23,44 +24,35 @@ int main(int argc, char *args[]) {
     return 1;
   }
   char *file_path = args[1];
-  size_t instr_count = load_instructions(file_path, instr_mem);
+  load_instructions(file_path, instr_mem);
 
-  const uint32_t total_instr_size = instr_count * 4;
   uint64_t clk_cycle = 0;
 
-  while (pc < total_instr_size) {
-    uint32_t next_pc = pc + 4;
-    uint32_t instr = fetch_next_instruction();
-    printf("\nPC: %d\nInstruction started: %08x\n", pc, instr);
+  IF_ID if_id_reg = {0};
+  ID_EX id_ex_reg = {0};
+  EX_MEM ex_mem_reg = {0};
+  MEM_WB mem_wb_reg = {0};
+  halt_signal halt = false;
 
-    control_signals ctrl = get_control_signals(
-        get_opcode(instr), get_funct3(instr), get_funct7(instr));
-
-    send_register_bank_input(get_rs1(instr), get_rs2(instr), get_rd(instr),
-                             ctrl.rd_we);
-
-    uint32_t imm = generate_imm(instr, ctrl.imm_type);
-    register_bank_output rb_out = get_register_bank_output();
-    uint32_t rs1 = rb_out.rs1_data;
-    uint32_t rs2 = ctrl.alu_src_imm ? imm : rb_out.rs2_data;
-
-    if (ctrl.branch && eval_branch(rs1, rs2, get_funct3(instr))) {
-      next_pc = pc + imm;
-      printf("branching taken, pc is %d\n", pc);
-    }
-
-    int32_t alu_result = execute_alu(rs1, rs2, ctrl.alu_op);
-    if (ctrl.data_mem_we) {
-      data_mem[alu_result] = rs1;
-    }
-    uint32_t reg_wr_data;
-    if (ctrl.mem_to_reg) {
-      reg_wr_data = data_mem[alu_result];
-    } else {
-      reg_wr_data = alu_result;
-    }
-    rd_write(reg_wr_data);
-    pc = next_pc;
+  while (!halt) {
     clk_cycle++;
+    if (!mem_wb_reg.halt_signal) {
+      printf("\nPress Enter to cycle...");
+      fflush(stdout);
+      (void)getchar();
+      printf("\nClock cycle: %lu\n", clk_cycle);
+    }
+
+    if (clk_cycle >= MAX_CLK_COUNT) {
+      printf("\nMax clock cycle count reached: Stopping simulation\n");
+      break;
+    }
+
+    halt = write_back(mem_wb_reg);
+    mem_wb_reg = memory_access(ex_mem_reg);
+    ex_mem_reg = execute(id_ex_reg);
+    id_ex_reg = instr_decode(if_id_reg);
+    if_id_reg = instr_fetch(if_id_reg, PC);
+    PC = if_id_reg.pc;
   }
 }

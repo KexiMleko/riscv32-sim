@@ -1,3 +1,4 @@
+#pragma once
 #include "./alu_op.h"
 #include "imm_type.h"
 #include <stdbool.h>

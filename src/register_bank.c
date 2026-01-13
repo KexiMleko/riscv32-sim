@@ -1,4 +1,5 @@
 #include "./register_bank.h"
+#include <stdint.h>
 #include <stdio.h>
 
 static uint32_t gp_regs[32] = {0};
@@ -27,4 +28,14 @@ void rd_write(uint32_t value) {
     gp_regs[r_bank.rd_addr] = value;
     printf("Write on x%d value: %d\n", r_bank.rd_addr, gp_regs[r_bank.rd_addr]);
   }
+}
+
+void rbank_write(uint32_t value, uint32_t rd_addr) {
+  if (rd_addr >= 32) {
+    printf("Invalid register address: %d\n", rd_addr);
+    return;
+  }
+  if (rd_addr == 0)
+    return;
+  gp_regs[rd_addr] = value;
 }
