@@ -16,7 +16,6 @@ uint32_t PC = 0;
 uint32_t instr_mem[1024] = {0};
 uint32_t data_mem[1024] = {0};
 
-static inline uint32_t fetch_next_instruction() { return instr_mem[PC >> 2]; }
 int main(int argc, char *args[]) {
   if (argc == 0) {
     perror("Must provide path to the assembly file or a rv32i binary with "

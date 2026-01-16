@@ -6,7 +6,7 @@ A cycle-accurate RV32I RISC-V simulator designed for visualizing microarchitectu
 
 | Feature | Status | Description |
 | --- | --- | --- |
-| **RV32I ISA** | Partial | Base integer instruction set support. No memory access addressing yet. |
+| **RV32I ISA** | Partial | Base integer instruction set support. |
 | **5-Stage Pipeline** | Functional | Separate IF, ID, EX, MEM, and WB stages. |
 | **Hazard Handling** | Manual | Requires `NOP` instructions in source assembly for RAW/Control hazards. |
 | **Scoreboard** | In-Dev | Tracking register status for Out-of-Order execution. |

@@ -3,9 +3,33 @@
 #include "./opcode.h"
 #include "alu_op.h"
 #include "imm_type.h"
+#include "mem_addressing_ctrl.h"
 #include <stdbool.h>
 #include <stdint.h>
 
+mem_addressing_ctrl_t decode_mem_addressing(uint32_t funct3) {
+  mem_addressing_ctrl_t mem_ctrl = {0};
+  switch (funct3) {
+  case 0x0:
+    mem_ctrl.addressing_width = MEM_WIDTH_BYTE;
+    break;
+  case 0x1:
+    mem_ctrl.addressing_width = MEM_WIDTH_HALFWORD;
+    break;
+  case 0x2:
+    mem_ctrl.addressing_width = MEM_WIDTH_WORD;
+    break;
+  case 0x4:
+    mem_ctrl.addressing_width = MEM_WIDTH_BYTE;
+    mem_ctrl.zero_extend = true;
+    break;
+  case 0x5:
+    mem_ctrl.addressing_width = MEM_WIDTH_HALFWORD;
+    mem_ctrl.zero_extend = true;
+    break;
+  }
+  return mem_ctrl;
+}
 control_signals get_control_signals(uint32_t opcode, uint32_t funct3,
                                     uint32_t funct7) {
   control_signals ctrl = {0};
@@ -41,12 +65,15 @@ control_signals get_control_signals(uint32_t opcode, uint32_t funct3,
     ctrl.alu_src_imm = true;
     ctrl.imm_type = IMM_I;
     ctrl.alu_op = ALU_ADD;
+    ctrl.data_mem_read_en = true;
+    ctrl.mem_addressing_ctrl = decode_mem_addressing(funct3);
     break;
   case OPCODE_STORE:
     ctrl.alu_src_imm = true;
-    ctrl.data_mem_we = true;
+    ctrl.data_mem_write_en = true;
     ctrl.imm_type = IMM_S;
     ctrl.alu_op = ALU_ADD;
+    ctrl.mem_addressing_ctrl = decode_mem_addressing(funct3);
     break;
   case OPCODE_LUI:
     ctrl.rd_we = true;
