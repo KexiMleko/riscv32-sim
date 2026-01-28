@@ -1,12 +1,13 @@
-CC := gcc
-CFLAGS := -Wall -Wextra -g -I./src
-TARGET := build/rvsim
+CC       := gcc
+SRCS     := $(shell find src -name '*.c')
 
-SRCS := $(wildcard src/*.c)
-OBJS := $(patsubst src/%.c,build/%.o,$(SRCS))
-DEPS := $(OBJS:.o=.d)
+OBJS     := $(patsubst src/%.c, build/%.o, $(SRCS))
 
-TSRC ?=branch.s
+DEPS     := $(OBJS:.o=.d)
+
+INCLUDES := $(shell find src -type d | sed 's/^/-I/')
+CFLAGS   := -Wall -Wextra -g $(INCLUDES)
+TARGET   := build/rvsim
 
 all: $(TARGET)
 
@@ -14,16 +15,13 @@ $(TARGET): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $^
 
 build/%.o: src/%.c
-	@mkdir -p build
+	@mkdir -p $(dir $@)
 	$(CC) $(CFLAGS) -MMD -MP -c $< -o $@
 
 -include $(DEPS)
 
 test: $(TARGET)
-ifndef TSRC
-	$(error TSRC variable is not set. Usage: make run TSRC=test.s)
-endif
 	./$(TARGET) ./tests/data/src/$(TSRC)
 
 clean:
-	rm -rf build/*
+	rm -rf build

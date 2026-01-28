@@ -1,11 +1,7 @@
-#include "./alu.h"
-#include "./pipe_regs.h"
-#include "./prog_load.h"
-#include "./stages/execute_stage.c"
-#include "./stages/instr_decode_stage.c"
-#include "./stages/instr_fetch_stage.c"
-#include "./stages/memory_access_stage.c"
-#include "./stages/write_back_stage.c"
+#include "alu.h"
+#include "pipe_regs.h"
+#include "prog_load.h"
+#include "stages/pipeline.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -46,7 +42,6 @@ int main(int argc, char *args[]) {
       printf("\nMax clock cycle count reached: Stopping simulation\n");
       break;
     }
-
     halt = write_back(mem_wb_reg);
     mem_wb_reg = memory_access(ex_mem_reg);
     ex_mem_reg = execute(id_ex_reg);

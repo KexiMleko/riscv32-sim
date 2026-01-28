@@ -4,6 +4,7 @@
 #include "../instr_fields.h"
 #include "../pipe_regs.h"
 #include "../regfile.h"
+#include "pipeline.h"
 #include <stdint.h>
 #include <stdio.h>
 

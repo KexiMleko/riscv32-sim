@@ -1,9 +1,9 @@
 #include "../pipe_regs.h"
 #include "../regfile.h"
+#include "pipeline.h"
 #include <stdint.h>
 #include <stdio.h>
 
-typedef bool halt_signal;
 halt_signal write_back(MEM_WB in) {
   if (in.halt_signal) {
     return true;
