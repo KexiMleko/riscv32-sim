@@ -15,14 +15,17 @@ static inline int32_t get_j_imm(uint32_t instr) {
 }
 static inline int32_t get_u_imm(uint32_t instr) { return (int32_t)instr >> 12; }
 static inline int32_t get_b_imm(uint32_t instr) {
-  uint32_t lower_five = (instr >> 7) & 0x1F;
-  uint32_t upper_seven = (instr >> 25) << 7;
-  uint32_t msb = upper_seven >> 6;
-  uint32_t lsb = lower_five >> 4;
-  lower_five &= ~0x1;
-  upper_seven &= ~0x80;
-  msb = ((msb << 1) | lsb) << 12;
-  return (uint32_t)(msb | upper_seven | lower_five);
+    int32_t imm = 0;
+    uint32_t b12 = (instr >> 31) & 0x1;  
+    uint32_t b11 = (instr >> 7)  & 0x1; 
+    uint32_t b10_5 = (instr >> 25) & 0x3F;
+    uint32_t b4_1 = (instr >> 8)  & 0xF;
+    imm = (b12 << 12) | (b11 << 11) | (b10_5 << 5) | (b4_1 << 1);
+
+    if (imm & 0x1000) {
+        imm |= 0xFFFFE000;
+    }
+    return imm;
 }
 static inline int32_t get_s_imm(uint32_t instr) {
   uint32_t lower_five = (instr >> 7) & 0x1F;

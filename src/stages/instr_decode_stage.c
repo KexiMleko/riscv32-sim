@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-ID_EX instr_decode(IF_ID in) {
+ID_EX instr_decode(IF_ID in, branch_ctrl *b_ctrl) {
   ID_EX out = {0};
   if (in.halt_signal) {
     out.halt_signal = true;
@@ -26,17 +26,18 @@ ID_EX instr_decode(IF_ID in) {
   regfile_out rb_out = regfile_read(rs1, rs2);
   int32_t imm = generate_imm(instr, ctrl.imm_type);
 
-  uint32_t next_pc = 0;
-  if (ctrl.branch && eval_branch(rs1, rs2, get_funct3(instr))) {
-    next_pc = in.pc + imm;
-    printf("branching taken, pc is %d\n", next_pc);
+  if (ctrl.branch &&
+      eval_branch(rb_out.rs1_data, rb_out.rs2_data, get_funct3(instr))) {
+
+    printf("Branch evaluated - imm=%d pc=%u\n", imm , in.pc);
+    b_ctrl->next_pc = in.curr_pc + imm;
+    b_ctrl->pc_next_sel = true;
   }
   out.imm = imm;
   out.rd_addr = rd;
   out.ctrl = ctrl;
   out.val1 = rb_out.rs1_data;
   out.val2 = rb_out.rs2_data;
-  printf("Instruction decoded - %d\n", instr);
 
   return out;
 }

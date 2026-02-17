@@ -7,8 +7,7 @@
 typedef struct {
   uint32_t instr;
   uint32_t pc;
-  int32_t next_pc;
-  bool pc_next_sel; // 0 - add result; 1 - branch res (next_pc)
+  int32_t curr_pc;//PC before increment primarily meant for branching logic 
   bool halt_signal;
 } IF_ID;
 

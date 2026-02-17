@@ -6,6 +6,7 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define MAX_CLK_COUNT 5000
 uint32_t PC = 0;
@@ -16,7 +17,7 @@ int main(int argc, char *args[]) {
   if (argc == 0) {
     perror("Must provide path to the assembly file or a rv32i binary with "
            "instructions only");
-    return 1;
+    return EXIT_FAILURE;
   }
   char *file_path = args[1];
   load_instructions(file_path, instr_mem);
@@ -29,24 +30,26 @@ int main(int argc, char *args[]) {
   MEM_WB mem_wb_reg = {0};
   halt_signal halt = false;
 
+  printf("\nPress Enter to cycle...\n");
   while (!halt) {
     clk_cycle++;
     if (!mem_wb_reg.halt_signal) {
-      printf("\nPress Enter to cycle...");
       fflush(stdout);
       (void)getchar();
-      printf("\nClock cycle: %lu\n", clk_cycle);
     }
 
     if (clk_cycle >= MAX_CLK_COUNT) {
       printf("\nMax clock cycle count reached: Stopping simulation\n");
-      break;
+      return EXIT_FAILURE;
     }
     halt = write_back(mem_wb_reg);
     mem_wb_reg = memory_access(ex_mem_reg);
     ex_mem_reg = execute(id_ex_reg);
-    id_ex_reg = instr_decode(if_id_reg);
-    if_id_reg = instr_fetch(if_id_reg, PC);
+
+    branch_ctrl b_ctrl = {.next_pc = 0, .pc_next_sel = false};
+    id_ex_reg = instr_decode(if_id_reg, &b_ctrl);
+    if_id_reg = instr_fetch(if_id_reg, &b_ctrl, PC);
     PC = if_id_reg.pc;
   }
+  return EXIT_SUCCESS;
 }
