@@ -28,6 +28,7 @@ int main(int argc, char *args[]) {
   ID_EX id_ex_reg = {0};
   EX_MEM ex_mem_reg = {0};
   MEM_WB mem_wb_reg = {0};
+  branch_ctrl b_ctrl = {.next_pc = 0, .pc_next_sel = false};
   halt_signal halt = false;
 
   printf("\nPress Enter to cycle...\n");
@@ -46,9 +47,14 @@ int main(int argc, char *args[]) {
     mem_wb_reg = memory_access(ex_mem_reg);
     ex_mem_reg = execute(id_ex_reg);
 
-    branch_ctrl b_ctrl = {.next_pc = 0, .pc_next_sel = false};
     id_ex_reg = instr_decode(if_id_reg, &b_ctrl);
-    if_id_reg = instr_fetch(if_id_reg, &b_ctrl, PC);
+    if_id_reg = instr_fetch(if_id_reg, PC);
+    /*
+     * if_id_reg.b_ctrl = b_ctrl is here to provide the illusion of instr_decode branch evaluation
+     * in cycle t and instr_fetch seeing that change through a register in cycle t+1.
+    */
+    if_id_reg.b_ctrl = b_ctrl;
+
     PC = if_id_reg.pc;
   }
   return EXIT_SUCCESS;

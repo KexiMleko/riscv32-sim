@@ -29,9 +29,11 @@ ID_EX instr_decode(IF_ID in, branch_ctrl *b_ctrl) {
   if (ctrl.branch &&
       eval_branch(rb_out.rs1_data, rb_out.rs2_data, get_funct3(instr))) {
 
-    printf("Branch evaluated - imm=%d pc=%u\n", imm , in.pc);
+    printf("Branch evaluated - imm=%d pc=%u\n", imm, in.pc);
     b_ctrl->next_pc = in.curr_pc + imm;
     b_ctrl->pc_next_sel = true;
+  } else {
+    b_ctrl->pc_next_sel = false;
   }
   out.imm = imm;
   out.rd_addr = rd;

@@ -9,6 +9,7 @@ nop
 nop
 
 beq  x5, x2, finish   
+nop
 
 skip:
 addi x10, x5, 20
@@ -16,4 +17,4 @@ nop
 nop
 finish:
 addi x10, x10, 50
-#addi x11, x0, 12
+addi x11, x0, 12
