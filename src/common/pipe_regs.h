@@ -1,5 +1,4 @@
 #pragma once
-#include "alu_op.h"
 #include "control_decoder.h"
 #include <stdbool.h>
 #include <stdint.h>

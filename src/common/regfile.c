@@ -1,5 +1,5 @@
 #include "regfile.h"
-#include "./regfile.h"
+#include "regfile.h"
 #include <stdint.h>
 #include <stdio.h>
 

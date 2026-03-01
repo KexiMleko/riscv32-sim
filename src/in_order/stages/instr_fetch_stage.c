@@ -1,5 +1,5 @@
-#include "../pipe_regs.h"
-#include "pipeline.h"
+#include "common/pipe_regs.h"
+#include "stages/pipeline.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>

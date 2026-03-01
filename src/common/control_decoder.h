@@ -1,5 +1,5 @@
 #pragma once
-#include "./alu_op.h"
+#include "alu_op.h"
 #include "imm_type.h"
 #include "mem_addressing_ctrl.h"
 #include <stdbool.h>

@@ -1,9 +1,9 @@
-#include "../pipe_regs.h"
-#include "pipeline.h"
+#include "common/pipe_regs.h"
+#include "stages/pipeline.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
-#include <sys/types.h>
+// #include <sys/types.h>
 
 extern uint32_t data_mem[1024];
 MEM_WB memory_access(EX_MEM in) {

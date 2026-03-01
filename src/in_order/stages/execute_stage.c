@@ -1,8 +1,8 @@
-#include "../alu.h"
-#include "../pipe_regs.h"
-#include "pipeline.h"
+#include "common/alu.h"
+#include "common/pipe_regs.h"
+#include "stages/pipeline.h"
 #include <stdint.h>
-#include <stdio.h>
+//#include <stdio.h>
 
 EX_MEM execute(ID_EX in) {
   EX_MEM out = {0};
@@ -18,6 +18,6 @@ EX_MEM execute(ID_EX in) {
   out.ctrl = in.ctrl;
   out.rd_addr = in.rd_addr;
 
-  printf("Execute - %x, result: %d \n", in.ctrl.alu_op, out.alu_res);
+ // printf("Execute - %x, result: %d \n", in.ctrl.alu_op, out.alu_res);
   return out;
 }

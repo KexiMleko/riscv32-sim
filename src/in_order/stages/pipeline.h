@@ -1,5 +1,5 @@
 #pragma once
-#include "../pipe_regs.h"
+#include "common/pipe_regs.h"
 typedef bool halt_signal;
 
 EX_MEM execute(ID_EX in);

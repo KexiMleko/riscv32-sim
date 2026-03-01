@@ -1,7 +1,7 @@
-#include "alu.h"
-#include "pipe_regs.h"
-#include "prog_load.h"
-#include "stages/pipeline.h"
+#include "common/alu.h"
+#include "common/prog_load.h"
+#include "config/config.h"
+#include "pipeline_interface.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -13,49 +13,25 @@ uint32_t PC = 0;
 uint32_t instr_mem[1024] = {0};
 uint32_t data_mem[1024] = {0};
 
-int main(int argc, char *args[]) {
+int main(int argc, char *argv[]) {
   if (argc == 0) {
     perror("Must provide path to the assembly file or a rv32i binary with "
            "instructions only");
     return EXIT_FAILURE;
   }
-  char *file_path = args[1];
-  load_instructions(file_path, instr_mem);
-
-  uint64_t clk_cycle = 0;
-
-  IF_ID if_id_reg = {0};
-  ID_EX id_ex_reg = {0};
-  EX_MEM ex_mem_reg = {0};
-  MEM_WB mem_wb_reg = {0};
-  branch_ctrl b_ctrl = {.next_pc = 0, .pc_next_sel = false};
-  halt_signal halt = false;
-
-  printf("\nPress Enter to cycle...\n");
-  while (!halt) {
-    clk_cycle++;
-    if (!mem_wb_reg.halt_signal) {
-      fflush(stdout);
-      (void)getchar();
-    }
-
-    if (clk_cycle >= MAX_CLK_COUNT) {
-      printf("\nMax clock cycle count reached: Stopping simulation\n");
-      return EXIT_FAILURE;
-    }
-    halt = write_back(mem_wb_reg);
-    mem_wb_reg = memory_access(ex_mem_reg);
-    ex_mem_reg = execute(id_ex_reg);
-
-    id_ex_reg = instr_decode(if_id_reg, &b_ctrl);
-    if_id_reg = instr_fetch(if_id_reg, PC);
-    /*
-     * if_id_reg.b_ctrl = b_ctrl is here to provide the illusion of instr_decode branch evaluation
-     * in cycle t and instr_fetch seeing that change through a register in cycle t+1.
-    */
-    if_id_reg.b_ctrl = b_ctrl;
-
-    PC = if_id_reg.pc;
+  sim_config cfg;
+  parse_config(argc, argv, &cfg);
+  load_instructions(cfg.file_path, instr_mem);
+  bool exit_status;
+  switch (cfg.mode) {
+  case MODE_IN_ORDER:
+    exit_status = run_inorder_pipeline(PC, MAX_CLK_COUNT);
+    break;
+  case MODE_OOO:
+    exit_status = run_ooo_pipeline(PC, MAX_CLK_COUNT);
+    break;
+  default:
+    exit_status = run_inorder_pipeline(PC, MAX_CLK_COUNT);
   }
-  return EXIT_SUCCESS;
+  return exit_status;
 }

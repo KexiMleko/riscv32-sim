@@ -23,5 +23,8 @@ build/%.o: src/%.c
 test: $(TARGET)
 	./$(TARGET) ./tests/data/src/$(TSRC)
 
+test-ooo: $(TARGET)
+	./$(TARGET) ./tests/data/src/$(TSRC) --mode=ooo
+
 clean:
 	rm -rf build
