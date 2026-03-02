@@ -1,3 +1,4 @@
+#include "config/params.h"
 #include "memory/memory.h"
 #include "pipe_regs.h"
 #include "pipeline.h"
@@ -7,7 +8,7 @@
 #include <stdlib.h>
 
 bool run_inorder_pipeline(int32_t PC, instr_memory *instr_mem,
-                          data_memory *data_mem, uint64_t MAX_CLK_COUNT) {
+                          data_memory *data_mem) {
 
   uint64_t clk_cycle = 0;
 
