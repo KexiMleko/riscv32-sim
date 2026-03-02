@@ -1,11 +1,11 @@
 #include "common/pipe_regs.h"
+#include "memory/memory.h"
 #include "stages/pipeline.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 
-extern uint32_t instr_mem[1024];
-IF_ID instr_fetch(IF_ID in, uint32_t pc) {
+IF_ID instr_fetch(IF_ID in, instr_memory *instr_mem, uint32_t pc) {
   IF_ID out = {0};
   out.curr_pc = pc;
 
@@ -13,7 +13,7 @@ IF_ID instr_fetch(IF_ID in, uint32_t pc) {
     out.halt_signal = true;
     return out;
   }
-  uint32_t instr = instr_mem[pc >> 2];
+  uint32_t instr = read_instr_mem(instr_mem, pc);
   if (instr == 0) {
     out.halt_signal = true;
     return out;
@@ -23,7 +23,7 @@ IF_ID instr_fetch(IF_ID in, uint32_t pc) {
   if (b_ctrl.pc_next_sel) {
     printf("Branching taken\n");
     pc = b_ctrl.next_pc;
-    instr = instr_mem[pc >> 2];
+    instr = read_instr_mem(instr_mem, pc);
     b_ctrl.pc_next_sel = false;
     b_ctrl.next_pc = 0;
   }
