@@ -11,7 +11,7 @@ typedef struct {
 typedef struct {
   uint32_t instr;
   uint32_t pc;
-  int32_t curr_pc; // PC before increment primarily meant for branching logic
+  uint32_t curr_pc; // PC before increment primarily meant for branching logic
   branch_ctrl b_ctrl;
   bool halt_signal;
 } IF_ID;

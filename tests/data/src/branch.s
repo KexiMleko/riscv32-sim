@@ -1,10 +1,12 @@
 addi x5, x0, 5
 nop
 nop
+nop
 beq  x5, x2, skip   # not taken
 
 addi x2, x0, 5
 
+nop
 nop
 nop
 
