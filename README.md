@@ -6,11 +6,11 @@ A cycle-accurate RV32I RISC-V simulator designed for visualizing microarchitectu
 
 | Feature | Status | Description |
 | --- | --- | --- |
-| **RV32I ISA** | Partial | Base integer instruction set support. |
+| **RV32I ISA** | Functional | Base integer instruction set support. |
 | **5-Stage Pipeline** | Functional | Separate IF, ID, EX, MEM, and WB stages. |
 | **Hazard Handling** | Manual | Requires `NOP` instructions in source assembly for RAW/Control hazards. |
+| **Branch Prediction** | Functional | 2-bit saturating adder predictor and pipeline flushing logic. |
 | **Scoreboard** | In-Dev | Tracking register status for Out-of-Order execution. |
-| **Branch Prediction** | In-Dev | Speculative execution and pipeline flushing logic. |
 | **Cycle Accuracy** | Goal | Currently 1-cycle-per-stage; multi-cycle latency modeling is planned. |
 
 ## Project Structure
