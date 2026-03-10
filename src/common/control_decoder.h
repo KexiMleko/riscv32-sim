@@ -15,6 +15,8 @@ typedef struct {
   alu_op_t alu_op;
   imm_type_t imm_type;
   mem_addressing_ctrl_t mem_addressing_ctrl;
+  uint32_t rs1_addr;
+  uint32_t rs2_addr;
 } control_signals;
 
 control_signals get_control_signals(uint32_t opcode, uint32_t funct3,

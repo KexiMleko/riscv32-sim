@@ -47,12 +47,14 @@ ID_EX instr_decode(IF_ID in, branch_ctrl *b_ctrl, bool *b_flush) {
   } else {
     b_ctrl->pc_next_sel = false;
   }
-
   out.imm = imm;
   out.rd_addr = rd;
   out.ctrl = ctrl;
   out.val1 = rb_out.rs1_data;
   out.val2 = rb_out.rs2_data;
 
+  // Forwarding
+  out.ctrl.rs1_addr = rs1;
+  out.ctrl.rs2_addr = rs2;
   return out;
 }
