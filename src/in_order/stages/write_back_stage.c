@@ -1,5 +1,5 @@
 #include "common/pipe_regs.h"
-#include "common/regfile.h"
+#include "regfile/regfile.h"
 #include "stages/pipeline.h"
 #include <stdint.h>
 #include <stdio.h>
