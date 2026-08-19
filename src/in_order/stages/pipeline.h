@@ -2,7 +2,7 @@
 #include "common/pipe_regs.h"
 #include "forwarding/forwarding_unit.h"
 #include "memory/memory.h"
-typedef bool halt_signal;
+#include "halt_signal.h"
 
 EX_MEM execute(ID_EX in, struct fw_data fw_data);
 ID_EX instr_decode(IF_ID in, branch_ctrl *b_ctrl, bool *b_flush);
