@@ -6,12 +6,12 @@
 #include "reservation_station/reservation_station.h"
 #include <stdint.h>
 
-void issue_instr(reservation_station *r_stations, unsigned int rs_cnt) {
+issue_result issue_instr(reservation_station *r_stations, unsigned int rs_cnt) {
   uint32_t instr = 0;
+  issue_result res = {0};
   if (dequeue_instr(&instr) != QUEUE_OK) {
-    return;
+    return res;
   }
-
   uint32_t opcode = get_opcode(instr);
   uint32_t funct3 = get_funct3(instr);
   uint32_t funct7 = get_funct7(instr);
@@ -23,21 +23,24 @@ void issue_instr(reservation_station *r_stations, unsigned int rs_cnt) {
 
   for (unsigned i = 0; i < rs_cnt; i++) {
     if (!r_stations[i].busy) {
-      reservation_station *rs = &r_stations[i];
-      rs->op = opcode;
+      reservation_station rs = r_stations[i];
+      rs.op = opcode;
 
       if (regfile_read_tag(rs1) == 0) {
-        rs->rs1_val = regfile_read_val(rs1);
+        rs.rs1_val = regfile_read_val(rs1);
       } else {
-        rs->rs1_tag = regfile_read_tag(rs1);
+        rs.rs1_tag = regfile_read_tag(rs1);
       }
       if (regfile_read_tag(rs2) == 0) {
-        rs->rs2_val = regfile_read_val(rs2);
+        rs.rs2_val = regfile_read_val(rs2);
       } else {
-        rs->rs1_tag = regfile_read_tag(rs1);
+        rs.rs1_tag = regfile_read_tag(rs1);
       }
-      rs->busy = true;
-      regfile_update_tag(rd, i);
+      rs.busy = true;
+      res.valid = true;
+      res.rs = rs;
+      res.tag = i;
+      return res;
     }
   }
 }
