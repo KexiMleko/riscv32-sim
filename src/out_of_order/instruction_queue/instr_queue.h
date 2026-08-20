@@ -1,3 +1,4 @@
+#pragma once
 //#include "alu_op.h"
 #include <stdint.h>
 // typedef struct {
@@ -14,5 +15,6 @@ typedef enum {
   QUEUE_EMPTY,
 } queue_status;
 
+queue_status dequeue_instr();
 queue_status enqueue_instr(uint32_t instr);
-queue_status dequeue_instr(uint32_t *instr);
+queue_status instr_queue_front(uint32_t *instr);

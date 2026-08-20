@@ -1,4 +1,5 @@
 
+#include "common_data_bus/common_data_bus.h"
 #include "config/params.h"
 #include "halt_signal.h"
 #include "instruction_queue/instr_queue.h"
@@ -18,6 +19,7 @@ bool run_ooo_pipeline(int32_t PC, instr_memory *instr_mem,
                       data_memory *data_mem) {
 
   reservation_station reservation_stations[RS_CNT] = {0};
+  CDB cdb = {0};
 
   uint64_t clk_cycle = 0;
   halt_signal halt = false;
@@ -36,14 +38,25 @@ bool run_ooo_pipeline(int32_t PC, instr_memory *instr_mem,
       printf("\nMax clock cycle count reached: Stopping simulation\n");
       return EXIT_FAILURE;
     }
-    IF_ID if_id_next = instr_fetch(if_id_reg, instr_mem, PC);
+    IF_ID if_id_next = ooo_instr_fetch(if_id_reg, instr_mem, PC);
     issue_result issue_res = issue_instr(reservation_stations, RS_CNT);
+    CDB exec_res = ooo_execute(reservation_stations, RS_CNT);
+    write_result(cdb, reservation_stations, RS_CNT);
 
     // SEQUENTIAL
     if_id_reg = if_id_next;
+    printf("%u\n", if_id_reg.instr);
     enqueue_instr(if_id_reg.instr);
-    regfile_update_tag(issue_res.rd, issue_res.tag);
-    reservation_stations[issue_res.tag] = issue_res.rs;
+    if (issue_res.valid) {
+      dequeue_instr();
+      regfile_update_tag(issue_res.rd, issue_res.tag);
+      reservation_stations[issue_res.tag] = issue_res.rs;
+    }
+    if (exec_res.valid)
+      reservation_stations[exec_res.tag].busy = false;
+
+    PC = if_id_reg.pc;
+    cdb = exec_res;
   }
   return EXIT_SUCCESS;
 }
