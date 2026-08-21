@@ -21,6 +21,7 @@ bool run_ooo_pipeline(int32_t PC, instr_memory *instr_mem,
 
   uint64_t clk_cycle = 0;
   halt_signal halt = false;
+  bool halt_pending = false;
 
   IF_ID if_id_reg = {0};
   branch_ctrl b_ctrl = {.next_pc = 0, .pc_next_sel = false};
@@ -39,12 +40,13 @@ bool run_ooo_pipeline(int32_t PC, instr_memory *instr_mem,
     IF_ID if_id_next = ooo_instr_fetch(if_id_reg, instr_mem, PC);
     issue_result issue_res = issue_instr();
     CDB exec_res = ooo_execute();
-    write_result(cdb);
+    halt_signal halt_temp = write_result(cdb, halt_pending);
 
     // SEQUENTIAL
     if_id_reg = if_id_next;
     printf("%u\n", if_id_reg.instr);
-    enqueue_instr(if_id_reg.instr);
+    if (!if_id_reg.halt_signal)
+      enqueue_instr(if_id_reg.instr);
     if (issue_res.valid) {
       dequeue_instr();
       regfile_update_tag(issue_res.rd, issue_res.tag);
@@ -55,6 +57,8 @@ bool run_ooo_pipeline(int32_t PC, instr_memory *instr_mem,
 
     PC = if_id_reg.pc;
     cdb = exec_res;
+    halt_pending = if_id_reg.halt_signal;
+    halt = halt_temp;
   }
   return EXIT_SUCCESS;
 }

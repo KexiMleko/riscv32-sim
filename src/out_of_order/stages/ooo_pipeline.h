@@ -1,4 +1,5 @@
 #include "common_data_bus/common_data_bus.h"
+#include "halt_signal.h"
 #include "memory/memory.h"
 #include "pipe_regs.h"
 #include "reservation_station/reservation_station.h"
@@ -13,4 +14,4 @@ typedef struct {
 IF_ID ooo_instr_fetch(IF_ID in, instr_memory *instr_mem, uint32_t pc);
 issue_result issue_instr();
 CDB ooo_execute();
-void write_result(CDB cdb);
+halt_signal write_result(CDB cdb, bool halt_pending);

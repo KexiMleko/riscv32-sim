@@ -11,7 +11,7 @@
 issue_result issue_instr() {
   uint32_t instr = 0;
   issue_result res = {0};
-  if (instr_queue_front(&instr) != QUEUE_OK) {
+  if (iq_front(&instr) != QUEUE_OK) {
     printf("[ISSUE] instruction queue empty\n");
     return res;
   }

@@ -8,11 +8,11 @@
 uint32_t instr_queue[MAX_QUEUE_SIZE];
 uint32_t size;
 
-bool is_empty() { return size == 0; }
-bool is_full() { return size == MAX_QUEUE_SIZE - 1; }
+bool iq_is_empty() { return size == 0; }
+bool iq_is_full() { return size == MAX_QUEUE_SIZE - 1; }
 
 queue_status enqueue_instr(uint32_t instr) {
-  if (is_full()) {
+  if (iq_is_full()) {
     return QUEUE_FULL;
   }
   instr_queue[size] = instr;
@@ -20,15 +20,15 @@ queue_status enqueue_instr(uint32_t instr) {
   printf("instructions queued: %u", size);
   return QUEUE_OK;
 }
-queue_status instr_queue_front(uint32_t *instr) {
-  if (is_empty())
+queue_status iq_front(uint32_t *instr) {
+  if (iq_is_empty())
     return QUEUE_EMPTY;
   *instr = instr_queue[0];
   return QUEUE_OK;
 }
 
 queue_status dequeue_instr() {
-  if (is_empty())
+  if (iq_is_empty())
     return QUEUE_EMPTY;
 
   for (size_t i = 0; i < size - 1; i++) {
