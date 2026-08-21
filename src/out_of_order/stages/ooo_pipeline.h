@@ -12,6 +12,6 @@ typedef struct {
 } issue_result;
 
 IF_ID ooo_instr_fetch(IF_ID in, instr_memory *instr_mem, uint32_t pc);
-issue_result issue_instr();
+issue_result issue_instr(CDB cdb);
 CDB ooo_execute();
 halt_signal write_result(CDB cdb, bool halt_pending);

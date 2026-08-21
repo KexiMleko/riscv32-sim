@@ -38,7 +38,7 @@ bool run_ooo_pipeline(int32_t PC, instr_memory *instr_mem,
       return EXIT_FAILURE;
     }
     IF_ID if_id_next = ooo_instr_fetch(if_id_reg, instr_mem, PC);
-    issue_result issue_res = issue_instr();
+    issue_result issue_res = issue_instr(cdb);
     CDB exec_res = ooo_execute();
     halt_signal halt_temp = write_result(cdb, halt_pending);
 
@@ -58,6 +58,8 @@ bool run_ooo_pipeline(int32_t PC, instr_memory *instr_mem,
     PC = if_id_reg.pc;
     cdb = exec_res;
     halt_pending = if_id_reg.halt_signal;
+    if (halt_pending)
+      printf("\nHALT PENDING\n");
     halt = halt_temp;
   }
   return EXIT_SUCCESS;

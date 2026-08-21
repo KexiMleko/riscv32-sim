@@ -1,3 +1,4 @@
+#include "common_data_bus/common_data_bus.h"
 #include "control_decoder.h"
 #include "imm_gen.h"
 #include "instr_fields.h"
@@ -7,8 +8,7 @@
 #include "reservation_station/reservation_station.h"
 #include <stdint.h>
 #include <stdio.h>
-
-issue_result issue_instr() {
+issue_result issue_instr(CDB cdb) {
   uint32_t instr = 0;
   issue_result res = {0};
   if (iq_front(&instr) != QUEUE_OK) {
@@ -48,6 +48,17 @@ issue_result issue_instr() {
       rs.rs2_val = regfile_read_val(rs2);
     } else {
       rs.rs2_tag = regfile_read_tag(rs2);
+    }
+  }
+
+  if (cdb.valid) {
+    if (rs.rs1_tag == cdb.tag) {
+      rs.rs1_tag = 0;
+      rs.rs1_val = cdb.value;
+    }
+    if (rs.rs2_tag == cdb.tag) {
+      rs.rs2_tag = 0;
+      rs.rs2_val = cdb.value;
     }
   }
   rs.busy = true;
