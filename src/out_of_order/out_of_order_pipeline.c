@@ -12,13 +12,11 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-#define RS_CNT 8
 
 // TOMASULO
 bool run_ooo_pipeline(int32_t PC, instr_memory *instr_mem,
                       data_memory *data_mem) {
 
-  reservation_station reservation_stations[RS_CNT] = {0};
   CDB cdb = {0};
 
   uint64_t clk_cycle = 0;
@@ -39,9 +37,9 @@ bool run_ooo_pipeline(int32_t PC, instr_memory *instr_mem,
       return EXIT_FAILURE;
     }
     IF_ID if_id_next = ooo_instr_fetch(if_id_reg, instr_mem, PC);
-    issue_result issue_res = issue_instr(reservation_stations, RS_CNT);
-    CDB exec_res = ooo_execute(reservation_stations, RS_CNT);
-    write_result(cdb, reservation_stations, RS_CNT);
+    issue_result issue_res = issue_instr();
+    CDB exec_res = ooo_execute();
+    write_result(cdb);
 
     // SEQUENTIAL
     if_id_reg = if_id_next;
@@ -50,10 +48,10 @@ bool run_ooo_pipeline(int32_t PC, instr_memory *instr_mem,
     if (issue_res.valid) {
       dequeue_instr();
       regfile_update_tag(issue_res.rd, issue_res.tag);
-      reservation_stations[issue_res.tag] = issue_res.rs;
+      rs_update(issue_res.tag, issue_res.rs);
     }
     if (exec_res.valid)
-      reservation_stations[exec_res.tag].busy = false;
+      rs_free(exec_res.tag);
 
     PC = if_id_reg.pc;
     cdb = exec_res;

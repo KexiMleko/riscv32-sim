@@ -8,7 +8,7 @@
 #include <stdint.h>
 #include <stdio.h>
 
-issue_result issue_instr(reservation_station *r_stations, unsigned int rs_cnt) {
+issue_result issue_instr() {
   uint32_t instr = 0;
   issue_result res = {0};
   if (instr_queue_front(&instr) != QUEUE_OK) {
@@ -27,37 +27,37 @@ issue_result issue_instr(reservation_station *r_stations, unsigned int rs_cnt) {
 
   int32_t imm = generate_imm(instr, ctrl.imm_type);
 
-  for (unsigned i = 0; i < rs_cnt; i++) {
-    if (!r_stations[i].busy) {
-      reservation_station rs = {0};
+  uint32_t ready_tag = rs_find_free_tag();
+  if (!ready_tag) {
+    printf("[ISSUE] stall: no free reservation station\n");
+    return res;
+  }
+  reservation_station rs = {0};
 
-      rs.op = ctrl.alu_op;
+  rs.op = ctrl.alu_op;
 
-      if (regfile_read_tag(rs1) == 0) {
-        rs.rs1_val = regfile_read_val(rs1);
-      } else {
-        rs.rs1_tag = regfile_read_tag(rs1);
-      }
-      if (ctrl.alu_src_imm) {
-        rs.rs2_val = (imm);
-      } else {
-        if (regfile_read_tag(rs2) == 0) {
-          rs.rs2_val = regfile_read_val(rs2);
-        } else {
-          rs.rs2_tag = regfile_read_tag(rs2);
-        }
-      }
-      rs.busy = true;
-      res.valid = true;
-      res.rs = rs;
-      res.rd = rd;
-      res.tag = i;
-      printf("[ISSUE] -> RS[%u] op=0x%02x rd=x%u rs1_tag=%u rs1_val=%d "
-             "rs2_tag=%u rs2_val=%d\n",
-             i, rs.op, rd, rs.rs1_tag, rs.rs1_val, rs.rs2_tag, rs.rs2_val);
-      return res;
+  if (regfile_read_tag(rs1) == 0) {
+    rs.rs1_val = regfile_read_val(rs1);
+  } else {
+    rs.rs1_tag = regfile_read_tag(rs1);
+  }
+  if (ctrl.alu_src_imm) {
+    rs.rs2_val = (imm);
+  } else {
+    if (regfile_read_tag(rs2) == 0) {
+      rs.rs2_val = regfile_read_val(rs2);
+    } else {
+      rs.rs2_tag = regfile_read_tag(rs2);
     }
   }
-  printf("[ISSUE] stall: no free reservation station\n");
+  rs.busy = true;
+  res.valid = true;
+  res.rs = rs;
+  res.rd = rd;
+  res.tag = ready_tag;
+
+  printf("[ISSUE] -> RS[%u] op=0x%02x rd=x%u rs1_tag=%u rs1_val=%d "
+         "rs2_tag=%u rs2_val=%d\n",
+         ready_tag, rs.op, rd, rs.rs1_tag, rs.rs1_val, rs.rs2_tag, rs.rs2_val);
   return res;
 }
