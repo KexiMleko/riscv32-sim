@@ -1,12 +1,14 @@
 #include "common_data_bus/common_data_bus.h"
 #include "halt_signal.h"
 #include "instruction_queue/instr_queue.h"
+#include "ls_buffers/load_buffers.h"
+#include "ls_buffers/store_buffers.h"
 #include "regfile/tomasulo_regfile.h"
 #include "reservation_station/reservation_station.h"
 #include <stdio.h>
 
 halt_signal write_result(CDB cdb, bool halt_pending) {
-  halt_signal halt = halt_pending && iq_is_empty() && rs_all_empty();
+  halt_signal halt = halt_pending && iq_is_empty() && rs_all_empty() && lb_all_empty() && sb_all_empty();
   if (!cdb.valid) {
     printf("[WB] CDB idle\n");
     return halt;

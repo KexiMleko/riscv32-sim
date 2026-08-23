@@ -3,6 +3,8 @@
 #include "config/params.h"
 #include "halt_signal.h"
 #include "instruction_queue/instr_queue.h"
+#include "ls_buffers/load_buffers.h"
+#include "ls_buffers/store_buffers.h"
 #include "memory/memory.h"
 #include "out_of_order/stages/ooo_pipeline.h"
 #include "pipe_regs.h"
@@ -39,7 +41,7 @@ bool run_ooo_pipeline(int32_t PC, instr_memory *instr_mem,
     }
     IF_ID if_id_next = ooo_instr_fetch(if_id_reg, instr_mem, PC);
     issue_result issue_res = issue_instr(cdb);
-    CDB exec_res = ooo_execute();
+    exec_result exec_res = ooo_execute(data_mem);
     halt_signal halt_temp = write_result(cdb, halt_pending);
 
     // SEQUENTIAL
@@ -48,15 +50,35 @@ bool run_ooo_pipeline(int32_t PC, instr_memory *instr_mem,
     if (!if_id_reg.halt_signal)
       enqueue_instr(if_id_reg.instr);
     if (issue_res.valid) {
+      printf("\nISSUE RES VALID\n");
+      if (issue_res.ctrl.data_mem_read_en) {
+        lb_update(issue_res.tag, issue_res.lb);
+        regfile_update_tag(issue_res.rd, issue_res.tag);
+      } else if (issue_res.ctrl.data_mem_write_en) {
+        sb_update(issue_res.tag, issue_res.sb);
+      } else {
+        regfile_update_tag(issue_res.rd, issue_res.tag);
+        rs_update(issue_res.tag, issue_res.rs);
+      }
       dequeue_instr();
-      regfile_update_tag(issue_res.rd, issue_res.tag);
-      rs_update(issue_res.tag, issue_res.rs);
     }
-    if (exec_res.valid)
-      rs_free(exec_res.tag);
+    switch (exec_res.freed_unit) {
+    case UNIT_RS:
+      rs_free(exec_res.freed_tag);
+      break;
+    case UNIT_LB:
+      lb_free(exec_res.freed_tag);
+      break;
+    case UNIT_SB:
+      sb_free(exec_res.freed_tag);
+      break;
+    case UNIT_NONE:
+      break;
+    }
 
     PC = if_id_reg.pc;
-    cdb = exec_res;
+    if (exec_res.cdb.valid)
+      cdb = exec_res.cdb;
     halt_pending = if_id_reg.halt_signal;
     if (halt_pending)
       printf("\nHALT PENDING\n");

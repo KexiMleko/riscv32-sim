@@ -16,17 +16,11 @@ uint32_t sb_find_free_tag(void) {
   return 0;
 }
 
-bool sb_add(uint32_t tag, uint32_t address, uint32_t write_value,
-            mem_addressing_ctrl_t mem_ctrl) {
+bool sb_update(uint32_t tag, store_buffer sb_new) {
   if (tag == 0 || tag > SB_CNT) {
     return false;
   }
-  store_buffers[tag - 1] = (store_buffer){
-      .busy = true,
-      .address = address,
-      .write_value = write_value,
-      .mem_ctrl = mem_ctrl,
-  };
+  store_buffers[tag - 1] = sb_new;
   return true;
 }
 
@@ -35,6 +29,15 @@ void sb_free(uint32_t tag) {
     return;
   }
   store_buffers[tag - 1].busy = false;
+}
+
+uint32_t sb_find_ready(void) {
+  for (unsigned i = 0; i < SB_CNT; i++) {
+    if (store_buffers[i].busy) {
+      return i + 1;
+    }
+  }
+  return 0;
 }
 
 void sb_commit(uint32_t tag, data_memory *dmem) {
