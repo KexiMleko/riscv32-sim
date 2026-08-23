@@ -53,11 +53,11 @@ uint32_t rs_find_ready(reservation_station *rs) {
   return 0;
 }
 bool rs_update(uint32_t tag, reservation_station rs_new) {
-  if (tag < RS_CNT) {
-    reservation_stations[tag - 1] = rs_new;
-    return true;
+  if (tag == 0 || tag > RS_CNT) {
+    return false;
   }
-  return false;
+  reservation_stations[tag - 1] = rs_new;
+  return true;
 }
 bool rs_all_empty() {
   for (size_t i = 0; i < RS_CNT; i++) {
