@@ -10,7 +10,7 @@ A cycle-accurate RV32I RISC-V simulator designed for visualizing microarchitectu
 | **5-Stage Pipeline** | Functional | Separate IF, ID, EX, MEM, and WB stages. |
 | **Hazard Handling** | Manual | Requires `NOP` instructions in source assembly for RAW/Control hazards. |
 | **Branch Prediction** | Functional | 2-bit saturating adder predictor and pipeline flushing logic. |
-| **Scoreboard** | In-Dev | Tracking register status for Out-of-Order execution. |
+| **Tomasulo** | Functional | Tomasulo Out-of-Order execution is functional for arithmetic and memory ops. | 
 | **Cycle Accuracy** | Goal | Currently 1-cycle-per-stage; multi-cycle latency modeling is planned. |
 
 ## Project Structure
