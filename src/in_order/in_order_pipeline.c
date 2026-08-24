@@ -47,7 +47,8 @@ bool run_inorder_pipeline(int32_t PC, instr_memory *instr_mem,
     struct fw_data fw_data = {
       .fw_signals = eval_forwarding(fw_ctrl),
       .alu_res_mem = ex_mem_reg.alu_res,
-      .alu_res_wb = mem_wb_reg.alu_res,
+      .alu_res_wb = mem_wb_reg.ctrl.mem_to_reg ? mem_wb_reg.data_o
+                                                : mem_wb_reg.alu_res,
     };
 
     const IF_ID if_id_next = instr_fetch(if_id_reg, instr_mem, PC);
