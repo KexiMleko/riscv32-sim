@@ -1,12 +1,8 @@
 #pragma once
+#include "branch_ctrl.h"
 #include "control_decoder.h"
 #include <stdbool.h>
 #include <stdint.h>
-
-typedef struct {
-  uint32_t next_pc;
-  bool pc_next_sel;
-} branch_ctrl;
 
 typedef struct {
   uint32_t instr;
