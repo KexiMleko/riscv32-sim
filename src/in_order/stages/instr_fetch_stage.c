@@ -20,11 +20,9 @@ IF_ID instr_fetch(IF_ID in, instr_memory *instr_mem, uint32_t pc) {
     return out;
   }
 
-  branch_ctrl b_ctrl = in.b_ctrl;
-  if (b_ctrl.pc_next_sel) {
+  if (in.b_ctrl.pc_next_sel) {
     printf("Branching taken\n");
-    pc = b_ctrl.next_pc;
-    b_ctrl = (branch_ctrl){0};
+    pc = in.b_ctrl.next_pc;
   } else {
     pc = perform_prediction(pc);
     printf("Predicted %d\n",pc);

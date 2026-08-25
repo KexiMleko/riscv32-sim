@@ -16,16 +16,20 @@ IF_ID ooo_instr_fetch(IF_ID in, instr_memory *instr_mem, uint32_t pc) {
   IF_ID out = {0};
   out.curr_pc = pc;
 
+  if (branch_pending) {
+    printf("[FETCH] stall: branch_pending, emitting bubble\n");
+    out.instr = 0;
+    out.pc = pc;
+    return out;
+  }
   if (in.halt_signal) {
     out.halt_signal = true;
     return out;
   }
 
-  branch_ctrl b_ctrl = in.b_ctrl;
-  if (b_ctrl.pc_next_sel) {
-    printf("Branching taken\n");
-    pc = b_ctrl.next_pc;
-    b_ctrl = (branch_ctrl){0};
+  if (in.b_ctrl.pc_next_sel) {
+    pc = in.b_ctrl.next_pc;
+    printf("Branching taken pc = %d\n",pc);
   } else {
     pc = perform_prediction(pc);
     printf("Predicted %d\n", pc);

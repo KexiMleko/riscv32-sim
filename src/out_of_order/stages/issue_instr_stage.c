@@ -1,5 +1,6 @@
 #include "alu.h"
 #include "alu_op.h"
+#include "branch_ctrl.h"
 #include "common_data_bus/common_data_bus.h"
 #include "control_decoder.h"
 #include "imm_gen.h"
@@ -9,19 +10,24 @@
 #include "ls_buffers/load_buffers.h"
 #include "ls_buffers/store_buffers.h"
 #include "ooo_pipeline.h"
+#include "pipe_regs.h"
 #include "regfile/tomasulo_regfile.h"
 #include "reservation_station/reservation_station.h"
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
 
+bool branch_pending = false;
+
 issue_result issue_instr(CDB cdb) {
-  uint32_t instr = 0;
+  iq_entry entry = {0};
   issue_result res = {0};
-  if (iq_front(&instr) != QUEUE_OK) {
+  if (iq_front(&entry) != QUEUE_OK) {
     printf("[ISSUE] instruction queue empty\n");
     return res;
   }
+  uint32_t instr = entry.instr;
+  uint32_t pc = entry.pc;
   char instr_str[50];
   instr_disasm(instr, instr_str, 50);
   printf("[ISSUE] dequeued instr = %s\n", instr_str);
@@ -35,6 +41,42 @@ issue_result issue_instr(CDB cdb) {
   control_signals ctrl = get_control_signals(opcode, funct3, funct7);
   int32_t imm = generate_imm(instr, ctrl.imm_type);
 
+  if (ctrl.branch) {
+    uint32_t t1 = regfile_read_tag(rs1);
+    uint32_t t2 = regfile_read_tag(rs2);
+    uint32_t v1 = regfile_read_val(rs1);
+    uint32_t v2 = regfile_read_val(rs2);
+
+    // Snoop CDB so we can resolve the same cycle the operand arrives
+    if (cdb.valid && t1 != 0 && t1 == cdb.tag) {
+      t1 = 0;
+      v1 = cdb.value;
+    }
+    if (cdb.valid && t2 != 0 && t2 == cdb.tag) {
+      t2 = 0;
+      v2 = cdb.value;
+    }
+
+    if (t1 || t2) {
+      printf("[ISSUE] branch stall: waiting on rs1_tag=%u rs2_tag=%u\n", t1,
+             t2);
+      branch_pending = true; // keep fetch stalled, retry next cycle
+      return res;            // res.valid still false -> no dequeue
+    }
+
+    bool taken = eval_branch(v1, v2, funct3);
+    uint32_t target = pc + imm;
+
+    branch_pending = false;
+
+    printf("[ISSUE] branch resolved: v1=%d v2=%d funct3=%u -> %s target=0x%x\n",
+           v1, v2, funct3, taken ? "TAKEN" : "NOT TAKEN", target);
+
+    res.b_ctrl = (branch_ctrl){.next_pc = target, .pc_next_sel = taken};
+    res.valid = true;
+    res.ctrl = ctrl;
+    return res;
+  }
   // Computing effective address for load and store instructions
   if ((ctrl.data_mem_read_en || ctrl.data_mem_write_en) && ctrl.alu_src_imm) {
     if (regfile_read_tag(rs1)) {

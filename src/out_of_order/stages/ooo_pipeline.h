@@ -1,3 +1,4 @@
+#include "branch_ctrl.h"
 #include "common_data_bus/common_data_bus.h"
 #include "control_decoder.h"
 #include "halt_signal.h"
@@ -11,6 +12,7 @@ typedef struct {
   bool valid;
   uint8_t tag;
   control_signals ctrl;
+  branch_ctrl b_ctrl;
   reservation_station rs;
   load_buffer lb;
   store_buffer sb;
@@ -24,6 +26,8 @@ typedef struct {
   exec_unit freed_unit;
   uint32_t freed_tag;
 } exec_result;
+
+extern bool branch_pending;
 
 IF_ID ooo_instr_fetch(IF_ID in, instr_memory *instr_mem, uint32_t pc);
 issue_result issue_instr(CDB cdb);

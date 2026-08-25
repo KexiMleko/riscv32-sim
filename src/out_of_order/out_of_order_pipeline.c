@@ -26,7 +26,6 @@ bool run_ooo_pipeline(int32_t PC, instr_memory *instr_mem,
   bool halt_pending = false;
 
   IF_ID if_id_reg = {0};
-  branch_ctrl b_ctrl = {.next_pc = 0, .pc_next_sel = false};
   printf("\nPress Enter to cycle...\n");
 
   while (!halt) {
@@ -47,15 +46,24 @@ bool run_ooo_pipeline(int32_t PC, instr_memory *instr_mem,
     // SEQUENTIAL
     if_id_reg = if_id_next;
     printf("%u\n", if_id_reg.instr);
-    if (!if_id_reg.halt_signal)
-      enqueue_instr(if_id_reg.instr);
+    if (!if_id_reg.halt_signal && if_id_reg.instr != 0)
+      enqueue_instr(if_id_reg.instr, if_id_reg.curr_pc);
     if (issue_res.valid) {
+      if_id_reg.b_ctrl = issue_res.b_ctrl;
       printf("\nISSUE RES VALID\n");
       if (issue_res.ctrl.data_mem_read_en) {
         lb_update(issue_res.tag, issue_res.lb);
         regfile_update_tag(issue_res.rd, issue_res.tag);
       } else if (issue_res.ctrl.data_mem_write_en) {
         sb_update(issue_res.tag, issue_res.sb);
+      } else if (issue_res.ctrl.branch) {
+        if (if_id_reg.b_ctrl.pc_next_sel) {
+          printf("[PIPE] branch TAKEN -> redirect PC=0x%x, flushing IQ\n",
+                 if_id_reg.b_ctrl.next_pc);
+          iq_flush();
+        } else {
+          printf("[PIPE] branch NOT TAKEN -> continue sequentially\n");
+        }
       } else {
         regfile_update_tag(issue_res.rd, issue_res.tag);
         rs_update(issue_res.tag, issue_res.rs);
