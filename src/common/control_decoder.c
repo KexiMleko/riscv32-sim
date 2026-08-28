@@ -38,12 +38,15 @@ control_signals get_control_signals(uint32_t opcode, uint32_t funct3,
     ctrl.rd_we = true;
     ctrl.imm_type = IMM_NONE;
     ctrl.alu_op = op_alu_decode(funct3, funct7);
+    ctrl.rs1_in_use = true;
+    ctrl.rs2_in_use = true;
     break;
   case OPCODE_OP_IMM:
     ctrl.rd_we = true;
     ctrl.alu_src_imm = true;
     ctrl.imm_type = IMM_I;
     ctrl.alu_op = op_imm_alu_decode(funct3, funct7);
+    ctrl.rs1_in_use = true;
     break;
   case OPCODE_AUIPC:
     ctrl.imm_type = IMM_U;
@@ -52,12 +55,15 @@ control_signals get_control_signals(uint32_t opcode, uint32_t funct3,
     ctrl.branch = true;
     ctrl.imm_type = IMM_B;
     ctrl.alu_op = ALU_NOP;
+    ctrl.rs1_in_use = true;
+    ctrl.rs2_in_use = true;
     break;
   case OPCODE_JAL:
     ctrl.imm_type = IMM_J;
     break;
   case OPCODE_JALR:
     ctrl.imm_type = IMM_I;
+    ctrl.rs1_in_use = true;
     break;
   case OPCODE_LOAD:
     ctrl.rd_we = true;
@@ -67,6 +73,7 @@ control_signals get_control_signals(uint32_t opcode, uint32_t funct3,
     ctrl.alu_op = ALU_ADD;
     ctrl.data_mem_read_en = true;
     ctrl.mem_addressing_ctrl = decode_mem_addressing(funct3);
+    ctrl.rs1_in_use = true;
     break;
   case OPCODE_STORE:
     ctrl.alu_src_imm = true;
@@ -74,6 +81,8 @@ control_signals get_control_signals(uint32_t opcode, uint32_t funct3,
     ctrl.imm_type = IMM_S;
     ctrl.alu_op = ALU_ADD;
     ctrl.mem_addressing_ctrl = decode_mem_addressing(funct3);
+    ctrl.rs1_in_use = true;
+    ctrl.rs2_in_use = true;
     break;
   case OPCODE_LUI:
     ctrl.rd_we = true;

@@ -17,6 +17,8 @@ typedef struct {
   mem_addressing_ctrl_t mem_addressing_ctrl;
   uint32_t rs1_addr;
   uint32_t rs2_addr;
+  bool rs1_in_use;
+  bool rs2_in_use;
 } control_signals;
 
 control_signals get_control_signals(uint32_t opcode, uint32_t funct3,

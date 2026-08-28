@@ -1,6 +1,9 @@
 #include "branch_prediction/branch_prediction_unit.h"
 #include "config/params.h"
+#include "control_decoder.h"
 #include "forwarding/forwarding_unit.h"
+#include "hazard_detection/hazard_detection_unit.h"
+#include "instr_fields.h"
 #include "memory/memory.h"
 #include "pipe_regs.h"
 #include "pipeline.h"
@@ -36,6 +39,20 @@ bool run_inorder_pipeline(int32_t PC, instr_memory *instr_mem,
       return EXIT_FAILURE;
     }
 
+    control_signals id_ctrl_peek = get_control_signals(
+        get_opcode(if_id_reg.instr), get_funct3(if_id_reg.instr),
+        get_funct7(if_id_reg.instr));
+    hd_ctrl hd_ctrl = {
+        .mem_to_reg_ex = id_ex_reg.ctrl.mem_to_reg,
+        .rd_we_ex = id_ex_reg.ctrl.rd_we,
+        .load_reg_dest_ex = id_ex_reg.rd_addr,
+        .rs1_id = get_rs1(if_id_reg.instr),
+        .rs2_id = get_rs2(if_id_reg.instr),
+        .rs1_in_use_id = id_ctrl_peek.rs1_in_use,
+        .rs2_in_use_id = id_ctrl_peek.rs2_in_use,
+    };
+    struct hd_signals hd = eval_hazard_detection(hd_ctrl);
+
     fw_ctrl fw_ctrl = {
       .rd_addr_mem = ex_mem_reg.rd_addr,
       .rd_addr_wb = mem_wb_reg.rd_addr,
@@ -64,15 +81,21 @@ bool run_inorder_pipeline(int32_t PC, instr_memory *instr_mem,
     if (b_flush) {
       if_id_reg = (IF_ID){0};
       if_id_reg.b_ctrl = b_ctrl;
-    } else {
+    } else if (hd.if_id_en) {
       if_id_reg = if_id_next;
     }
 
-    id_ex_reg = id_ex_next;
+    if (hd.ctrl_pass) {
+      id_ex_reg = id_ex_next;
+    } else {
+      id_ex_reg = (ID_EX){0};
+    }
     ex_mem_reg = ex_mem_next;
     mem_wb_reg = mem_wb_next;
     seq_write_btb();
-    PC = if_id_reg.pc;
+    if (hd.pc_en) {
+      PC = if_id_reg.pc;
+    }
     printf("-----------------------------\n");
   }
   printf("Cycle count: %lu\n", clk_cnt);
