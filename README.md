@@ -8,9 +8,10 @@ A cycle-accurate RV32I RISC-V simulator designed for visualizing microarchitectu
 | --- | --- | --- |
 | **RV32I ISA** | Functional | Base integer instruction set support. |
 | **5-Stage Pipeline** | Functional | Separate IF, ID, EX, MEM, and WB stages. |
-| **Hazard Handling** | Manual | Requires `NOP` instructions in source assembly for RAW/Control hazards. |
-| **Branch Prediction** | Functional | 2-bit saturating adder predictor and pipeline flushing logic. |
-| **Tomasulo** | Functional | Tomasulo Out-of-Order execution is functional for arithmetic and memory ops. | 
+| **ALU Forwarding** | Functional | MEM→EX and WB→EX forwarding paths eliminate stalls for ALU RAW hazards. |
+| **Hazard Detection** | Functional | Detects load-use hazards and stalls the pipeline via `pc_en`, `if_id_en`, and `ctrl_pass` gating. |
+| **Branch Prediction** | Functional | 2-bit saturating predictor with BTB and pipeline flushing on misprediction. |
+| **Tomasulo (OoO)** | Functional | Standalone out-of-order pipeline with reservation stations, CDB write-back, and load/store buffers for memory ops. |
 | **Cycle Accuracy** | Goal | Currently 1-cycle-per-stage; multi-cycle latency modeling is planned. |
 
 ## Project Structure
@@ -84,5 +85,5 @@ make clean
 ## Technical Specification
 
 * **ISA:** RV32I (Base Integer Instruction Set).
-* **Hazard Handling:** Currently requires manual NOP insertion in the source assembly/instructions. Hardware-level detection and pipeline stalling are under development.
-* **Execution Model:** 5-stage pipeline with a standalone decoder. Out-of-order Scoreboard system, branch prediction and hazard analysis are in development.
+* **Hazard Handling:** ALU RAW hazards are resolved by the forwarding unit (MEM→EX, WB→EX). Load-use hazards are caught by the hazard detection unit, which stalls IF/ID and injects a bubble into ID/EX for one cycle. Control hazards are handled by the branch predictor with flush-on-misprediction.
+* **Execution Models:** Two selectable pipelines share a common front-end and decoder — a classic in-order 5-stage pipeline, and a Tomasulo-based out-of-order pipeline with reservation stations, a common data bus, and load/store buffers.
