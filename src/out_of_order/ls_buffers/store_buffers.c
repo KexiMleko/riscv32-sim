@@ -4,45 +4,49 @@
 #include <stdio.h>
 #include "trace.h"
 
-#define SB_CNT 4
+#define SB_SLOT(tag) ((tag) - SB_TAG_BASE - 1)
+
+static bool sb_tag_valid(uint32_t tag) {
+  return tag > SB_TAG_BASE && tag <= SB_TAG_BASE + SB_CNT;
+}
 
 static store_buffer store_buffers[SB_CNT];
 
 uint32_t sb_find_free_tag(void) {
   for (unsigned i = 0; i < SB_CNT; i++) {
     if (!store_buffers[i].busy) {
-      return i + 1;
+      return SB_TAG_BASE + i + 1;
     }
   }
   return 0;
 }
 
 bool sb_update(uint32_t tag, store_buffer sb_new) {
-  if (tag == 0 || tag > SB_CNT) {
+  if (!sb_tag_valid(tag)) {
     return false;
   }
-  store_buffers[tag - 1] = sb_new;
+  store_buffers[SB_SLOT(tag)] = sb_new;
   return true;
 }
 
 void sb_free(uint32_t tag) {
-  if (tag == 0 || tag > SB_CNT) {
+  if (!sb_tag_valid(tag)) {
     return;
   }
-  store_buffers[tag - 1].busy = false;
+  store_buffers[SB_SLOT(tag)].busy = false;
 }
 
 uint32_t sb_find_ready(void) {
   for (unsigned i = 0; i < SB_CNT; i++) {
     if (store_buffers[i].busy) {
-      return i + 1;
+      return SB_TAG_BASE + i + 1;
     }
   }
   return 0;
 }
 
 void sb_commit(uint32_t tag, data_memory *dmem) {
-  store_buffer *sb = &store_buffers[tag - 1];
+  store_buffer *sb = &store_buffers[SB_SLOT(tag)];
   data_mem_write(sb->write_value, sb->address, sb->mem_ctrl.addressing_width,
                  dmem);
   trace_note(TR_EXEC, "[0x%04x] ← %d", sb->address, (int32_t)sb->write_value);

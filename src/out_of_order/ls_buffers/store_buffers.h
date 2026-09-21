@@ -1,4 +1,5 @@
 #pragma once
+#include "common_data_bus/common_data_bus.h"
 #include "mem_addressing_ctrl.h"
 #include "memory/memory.h"
 #include <stdbool.h>

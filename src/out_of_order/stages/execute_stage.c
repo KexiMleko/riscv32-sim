@@ -16,7 +16,7 @@ exec_result ooo_execute(data_memory *dmem) {
   uint32_t rs_ready_tag = rs_find_ready(&rs);
   if (lb_ready_tag) {
     uint32_t val = lb_execute(lb_ready_tag, dmem);
-    trace_row(TR_EXEC, "LB%u load", lb_ready_tag);
+    trace_row(TR_EXEC, "LB%u load", lb_ready_tag - LB_TAG_BASE);
     return (exec_result){
         .cdb = {.tag = lb_ready_tag, .valid = true, .value = val},
         .freed_unit = UNIT_LB,
@@ -24,7 +24,7 @@ exec_result ooo_execute(data_memory *dmem) {
     };
 
   } else if (sb_ready_tag) {
-    trace_row(TR_EXEC, "SB%u store", sb_ready_tag);
+    trace_row(TR_EXEC, "SB%u store", sb_ready_tag - SB_TAG_BASE);
     sb_commit(sb_ready_tag, dmem);
     return (exec_result){
         .cdb = {.valid = false},

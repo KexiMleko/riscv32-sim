@@ -6,8 +6,6 @@
 #include "alu.h"
 #include "trace.h"
 
-#define RS_CNT 8
-
 static reservation_station reservation_stations[RS_CNT] = {0};
 
 void rs_snoop_cdb(CDB cdb) {

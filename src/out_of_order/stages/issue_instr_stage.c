@@ -9,7 +9,6 @@
 #include "ls_buffers/load_buffers.h"
 #include "ls_buffers/store_buffers.h"
 #include "ooo_pipeline.h"
-#include "pipe_regs.h"
 #include "regfile/tomasulo_regfile.h"
 #include "reservation_station/reservation_station.h"
 #include <stdbool.h>
@@ -92,7 +91,7 @@ issue_result issue_instr(CDB cdb) {
           .address = addr, .busy = true, .mem_ctrl = ctrl.mem_addressing_ctrl};
       res = (issue_result){
           .ctrl = ctrl, .lb = lb, .rd = rd, .tag = lb_free_tag, .valid = true};
-      trace_note(TR_ISSUE, "→ LB%u", lb_free_tag);
+      trace_note(TR_ISSUE, "→ LB%u", lb_free_tag - LB_TAG_BASE);
       return res;
     }
     if (ctrl.data_mem_write_en) {
@@ -108,7 +107,7 @@ issue_result issue_instr(CDB cdb) {
                                        .write_value = rd};
       res = (issue_result){
           .ctrl = ctrl, .sb = sb, .tag = sb_free_tag, .valid = true};
-      trace_note(TR_ISSUE, "→ SB%u", sb_free_tag);
+      trace_note(TR_ISSUE, "→ SB%u", sb_free_tag - SB_TAG_BASE);
       return res;
     }
   }

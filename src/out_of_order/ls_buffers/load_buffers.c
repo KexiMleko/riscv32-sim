@@ -4,45 +4,49 @@
 #include <stdio.h>
 #include "trace.h"
 
-#define LB_CNT 4
+#define LB_SLOT(tag) ((tag) - LB_TAG_BASE - 1)
+
+static bool lb_tag_valid(uint32_t tag) {
+  return tag > LB_TAG_BASE && tag <= LB_TAG_BASE + LB_CNT;
+}
 
 static load_buffer load_buffers[LB_CNT];
 
 uint32_t lb_find_free_tag(void) {
   for (unsigned i = 0; i < LB_CNT; i++) {
     if (!load_buffers[i].busy) {
-      return i + 1;
+      return LB_TAG_BASE + i + 1;
     }
   }
   return 0;
 }
 
 bool lb_update(uint32_t tag, load_buffer lb_new) {
-  if (tag == 0 || tag > LB_CNT) {
+  if (!lb_tag_valid(tag)) {
     return false;
   }
-  load_buffers[tag - 1] = lb_new;
+  load_buffers[LB_SLOT(tag)] = lb_new;
   return true;
 }
 
 void lb_free(uint32_t tag) {
-  if (tag == 0 || tag > LB_CNT) {
+  if (!lb_tag_valid(tag)) {
     return;
   }
-  load_buffers[tag - 1].busy = false;
+  load_buffers[LB_SLOT(tag)].busy = false;
 }
 
 uint32_t lb_find_ready(void) {
   for (unsigned i = 0; i < LB_CNT; i++) {
     if (load_buffers[i].busy) {
-      return i + 1;
+      return LB_TAG_BASE + i + 1;
     }
   }
   return 0;
 }
 
 uint32_t lb_execute(uint32_t tag, data_memory *dmem) {
-  load_buffer *lb = &load_buffers[tag - 1];
+  load_buffer *lb = &load_buffers[LB_SLOT(tag)];
   uint32_t val = data_mem_read(lb->address, lb->mem_ctrl.zero_extend,
                                lb->mem_ctrl.addressing_width, dmem);
   trace_note(TR_EXEC, "[0x%04x] → %d", lb->address, (int32_t)val);
