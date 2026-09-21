@@ -106,8 +106,7 @@ bool run_ooo_pipeline(int32_t PC, instr_memory *instr_mem,
     }
 
     PC = if_id_reg.pc;
-    if (exec_res.cdb.valid)
-      cdb = exec_res.cdb;
+    cdb = exec_res.cdb;
     halt_pending = if_id_reg.halt_signal;
     if (halt_pending)
       trace_note(TR_FETCH, "end of program, draining");
