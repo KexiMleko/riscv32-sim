@@ -16,5 +16,6 @@ halt_signal write_result(CDB cdb, bool halt_pending) {
   trace_row(TR_CDB, "#%u = %d", cdb.tag, cdb.value);
   regfile_cdb_snoop(cdb);
   rs_snoop_cdb(cdb);
+  sb_snoop_cdb(cdb);
   return halt;
 }

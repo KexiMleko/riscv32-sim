@@ -75,11 +75,17 @@ bool run_inorder_pipeline(int32_t PC, instr_memory *instr_mem,
                                                 : mem_wb_reg.alu_res,
     };
 
+    /*
+     * The register file is written in the first half of the cycle and read
+     * in the second, so write-back has to run before decode to let ID see the
+     * value of an instruction that is in WB in the same cycle.
+     */
+    halt = write_back(mem_wb_reg);
+
     const IF_ID if_id_next = instr_fetch(if_id_reg, instr_mem, PC);
     const ID_EX id_ex_next = instr_decode(if_id_reg, &b_ctrl, &b_flush);
     const EX_MEM ex_mem_next = execute(id_ex_reg, fw_data);
     const MEM_WB mem_wb_next = memory_access(ex_mem_reg, data_mem);
-    halt = write_back(mem_wb_reg);
 
     trace_row_instr(TR_IF, if_id_next.instr);
     trace_row_instr(TR_ID, if_id_reg.instr);

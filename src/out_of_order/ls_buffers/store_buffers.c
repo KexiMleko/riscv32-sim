@@ -1,4 +1,5 @@
 #include "store_buffers.h"
+#include "common_data_bus/common_data_bus.h"
 #include "memory/memory.h"
 #include <stddef.h>
 #include <stdio.h>
@@ -38,11 +39,22 @@ void sb_free(uint32_t tag) {
 
 uint32_t sb_find_ready(void) {
   for (unsigned i = 0; i < SB_CNT; i++) {
-    if (store_buffers[i].busy) {
+    if (store_buffers[i].busy && store_buffers[i].value_tag == 0) {
       return SB_TAG_BASE + i + 1;
     }
   }
   return 0;
+}
+
+void sb_snoop_cdb(CDB cdb) {
+  for (unsigned i = 0; i < SB_CNT; i++) {
+    store_buffer *sb = &store_buffers[i];
+    if (sb->busy && sb->value_tag != 0 && sb->value_tag == cdb.tag) {
+      sb->write_value = cdb.value;
+      sb->value_tag = 0;
+      trace_note(TR_CDB, "→ SB%u.v", i + 1);
+    }
+  }
 }
 
 void sb_commit(uint32_t tag, data_memory *dmem) {
@@ -63,9 +75,15 @@ bool sb_all_empty(void) {
 void sb_render(char *buf, size_t cap) {
   buf[0] = '\0';
   for (size_t i = 0; i < SB_CNT; i++) {
-    if (store_buffers[i].busy)
-      trace_appendf(buf, cap, "%sSB%zu [0x%04x] ← %d", buf[0] ? "\n" : "",
-                    i + 1, store_buffers[i].address,
-                    (int32_t)store_buffers[i].write_value);
+    const store_buffer *sb = &store_buffers[i];
+    if (!sb->busy)
+      continue;
+    char val[16];
+    if (sb->value_tag)
+      snprintf(val, sizeof(val), "#%u", sb->value_tag);
+    else
+      snprintf(val, sizeof(val), "%d", (int32_t)sb->write_value);
+    trace_appendf(buf, cap, "%sSB%zu [0x%04x] ← %s", buf[0] ? "\n" : "", i + 1,
+                  sb->address, val);
   }
 }

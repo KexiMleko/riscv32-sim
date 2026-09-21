@@ -101,13 +101,24 @@ issue_result issue_instr(CDB cdb) {
         trace_stat_stall("no free SB");
         return res;
       }
+      // Store data comes from rs2. If it is still in flight the SB waits for
+      // it on the CDB (rs2 is not the rd field, S-type has no rd)
+      uint32_t data_tag = regfile_read_tag(rs2);
+      uint32_t data_val = regfile_read_val(rs2);
+      if (cdb.valid && data_tag != 0 && data_tag == cdb.tag) {
+        data_tag = 0;
+        data_val = cdb.value;
+      }
       store_buffer sb = (store_buffer){.address = addr,
                                        .busy = true,
                                        .mem_ctrl = ctrl.mem_addressing_ctrl,
-                                       .write_value = rd};
+                                       .write_value = data_val,
+                                       .value_tag = data_tag};
       res = (issue_result){
           .ctrl = ctrl, .sb = sb, .tag = sb_free_tag, .valid = true};
       trace_note(TR_ISSUE, "→ SB%u", sb_free_tag - SB_TAG_BASE);
+      if (data_tag)
+        trace_note(TR_ISSUE, "data waits on #%u", data_tag);
       return res;
     }
   }
