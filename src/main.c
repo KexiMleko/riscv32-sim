@@ -23,9 +23,9 @@ int main(int argc, char *argv[]) {
   uint32_t imem_size = cfg.imem_size == 0 ? DEFAULT_IMEM_SIZE : cfg.imem_size;
   uint32_t dmem_size = cfg.dmem_size == 0 ? DEFAULT_DMEM_SIZE : cfg.dmem_size;
   instr_memory *instr_mem =
-      malloc(sizeof(uint32_t) * imem_size + sizeof(imem_size));
+      calloc(1, sizeof(uint32_t) * imem_size + sizeof(imem_size));
   data_memory *data_mem =
-      malloc(sizeof(uint32_t) * dmem_size + sizeof(dmem_size));
+      calloc(1, sizeof(uint32_t) * dmem_size + sizeof(dmem_size));
   instr_mem->size = imem_size;
   data_mem->size = dmem_size;
 

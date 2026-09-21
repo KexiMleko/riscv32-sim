@@ -1,6 +1,7 @@
 #include "regfile.h"
 #include <stdint.h>
 #include <stdio.h>
+#include "trace.h"
 
 static uint32_t gp_regs[32] = {0};
 
@@ -19,4 +20,13 @@ void rd_write(uint32_t value, uint32_t rd_addr) {
   if (rd_addr == 0)
     return;
   gp_regs[rd_addr] = value;
+}
+
+void regfile_render(char *buf, size_t cap) {
+  buf[0] = '\0';
+  for (unsigned r = 1; r < 32; r++) {
+    if (gp_regs[r] != 0)
+      trace_appendf(buf, cap, "%sx%u=%d", buf[0] ? "  " : "", r,
+                    (int32_t)gp_regs[r]);
+  }
 }

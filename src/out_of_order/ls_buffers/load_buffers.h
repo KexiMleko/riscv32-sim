@@ -2,6 +2,7 @@
 #include "mem_addressing_ctrl.h"
 #include "memory/memory.h"
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 typedef struct {
@@ -16,3 +17,4 @@ void lb_free(uint32_t tag);
 uint32_t lb_find_ready(void);
 uint32_t lb_execute(uint32_t tag, data_memory *dmem);
 bool lb_all_empty(void);
+void lb_render(char *buf, size_t cap);

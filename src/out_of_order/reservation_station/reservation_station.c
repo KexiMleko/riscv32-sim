@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <sys/types.h>
+#include "alu.h"
+#include "trace.h"
 
 #define RS_CNT 8
 
@@ -17,12 +19,12 @@ void rs_snoop_cdb(CDB cdb) {
     if (reservation_stations[i].rs1_tag == cdb.tag) {
       reservation_stations[i].rs1_val = cdb.value;
       reservation_stations[i].rs1_tag = 0;
-      printf("[WB]  RS[%u] rs1 resolved (val=%d)\n", i + 1, cdb.value);
+      trace_note(TR_CDB, "→ RS%u.j", i + 1);
     }
     if (reservation_stations[i].rs2_tag == cdb.tag) {
       reservation_stations[i].rs2_val = cdb.value;
       reservation_stations[i].rs2_tag = 0;
-      printf("[WB]  RS[%u] rs2 resolved (val=%d)\n", i + 1, cdb.value);
+      trace_note(TR_CDB, "→ RS%u.k", i + 1);
     }
   }
 }
@@ -44,9 +46,6 @@ uint32_t rs_find_ready(reservation_station *rs) {
       if (rs_temp.rs1_tag == 0 && rs_temp.rs2_tag == 0) {
         *rs = rs_temp;
         return i + 1;
-      } else {
-        printf("[EX] RS[%zu] waiting: rs1_tag=%u rs2_tag=%u\n", i + 1,
-               rs_temp.rs1_tag, rs_temp.rs2_tag);
       }
     }
   }
@@ -65,4 +64,26 @@ bool rs_all_empty() {
       return false;
   }
   return true;
+}
+
+// One line per busy station: operand value or the #tag it is waiting for
+void rs_render(char *buf, size_t cap) {
+  buf[0] = '\0';
+  for (size_t i = 0; i < RS_CNT; i++) {
+    const reservation_station *rs = &reservation_stations[i];
+    if (!rs->busy)
+      continue;
+    char j[16], k[16];
+    if (rs->rs1_tag)
+      snprintf(j, sizeof(j), "#%u", rs->rs1_tag);
+    else
+      snprintf(j, sizeof(j), "%d", rs->rs1_val);
+    if (rs->rs2_tag)
+      snprintf(k, sizeof(k), "#%u", rs->rs2_tag);
+    else
+      snprintf(k, sizeof(k), "%d", rs->rs2_val);
+    trace_appendf(buf, cap, "%sRS%zu %-4s j=%-4s k=%-4s %s", buf[0] ? "\n" : "",
+                  i + 1, alu_op_str(rs->op), j, k,
+                  (rs->rs1_tag || rs->rs2_tag) ? "waiting" : "ready");
+  }
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 typedef enum {
@@ -19,3 +20,4 @@ queue_status dequeue_instr();
 queue_status enqueue_instr(uint32_t instr, uint32_t pc);
 queue_status iq_front(iq_entry *out);
 void iq_flush();
+void iq_render(char *buf, size_t cap);

@@ -1,16 +1,10 @@
 #include "branch_prediction/branch_prediction_unit.h"
 #include "common/pipe_regs.h"
-#include "instr_disasm.h"
+#include "trace.h"
 #include "memory/memory.h"
 #include "stages/pipeline.h"
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
-void ui_print_instr(uint32_t instr) {
-  char instr_str[50];
-  instr_disasm(instr, instr_str, 50);
-  printf("Instruction fetched: %s\n", instr_str);
-}
 IF_ID instr_fetch(IF_ID in, instr_memory *instr_mem, uint32_t pc) {
   IF_ID out = {0};
   out.curr_pc = pc;
@@ -21,22 +15,22 @@ IF_ID instr_fetch(IF_ID in, instr_memory *instr_mem, uint32_t pc) {
   }
 
   if (in.b_ctrl.pc_next_sel) {
-    printf("Branching taken\n");
     pc = in.b_ctrl.next_pc;
+    trace_note(TR_IF, "redirect → 0x%04x", pc);
   } else {
-    pc = perform_prediction(pc);
-    printf("Predicted %d\n",pc);
+    uint32_t predicted = perform_prediction(pc);
+    if (predicted != pc)
+      trace_note(TR_IF, "BTB predicts taken → 0x%04x", predicted);
+    pc = predicted;
   }
   uint32_t instr = read_instr_mem(instr_mem, pc);
   if (instr == 0) {
     out.halt_signal = true;
+    trace_note(TR_IF, "end of program");
     return out;
   }
 
-  ui_print_instr(instr);
-
   pc += 4;
-  printf("PC: %d\n", pc);
   out.instr = instr;
   out.pc = pc;
   return out;

@@ -2,6 +2,7 @@
 #include "mem_addressing_ctrl.h"
 #include "memory/memory.h"
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 typedef struct {
@@ -17,3 +18,4 @@ void sb_free(uint32_t tag);
 uint32_t sb_find_ready(void);
 void sb_commit(uint32_t tag, data_memory *dmem);
 bool sb_all_empty(void);
+void sb_render(char *buf, size_t cap);

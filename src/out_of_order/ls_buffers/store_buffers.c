@@ -2,6 +2,7 @@
 #include "memory/memory.h"
 #include <stddef.h>
 #include <stdio.h>
+#include "trace.h"
 
 #define SB_CNT 4
 
@@ -44,8 +45,7 @@ void sb_commit(uint32_t tag, data_memory *dmem) {
   store_buffer *sb = &store_buffers[tag - 1];
   data_mem_write(sb->write_value, sb->address, sb->mem_ctrl.addressing_width,
                  dmem);
-  printf("[SB]  tag=%u addr=0x%08x val=%u committed\n", tag, sb->address,
-         sb->write_value);
+  trace_note(TR_EXEC, "[0x%04x] ← %d", sb->address, (int32_t)sb->write_value);
 }
 
 bool sb_all_empty(void) {
@@ -54,4 +54,14 @@ bool sb_all_empty(void) {
       return false;
   }
   return true;
+}
+
+void sb_render(char *buf, size_t cap) {
+  buf[0] = '\0';
+  for (size_t i = 0; i < SB_CNT; i++) {
+    if (store_buffers[i].busy)
+      trace_appendf(buf, cap, "%sSB%zu [0x%04x] ← %d", buf[0] ? "\n" : "",
+                    i + 1, store_buffers[i].address,
+                    (int32_t)store_buffers[i].write_value);
+  }
 }

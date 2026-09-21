@@ -2,6 +2,7 @@
 #include "memory/memory.h"
 #include <stddef.h>
 #include <stdio.h>
+#include "trace.h"
 
 #define LB_CNT 4
 
@@ -44,7 +45,7 @@ uint32_t lb_execute(uint32_t tag, data_memory *dmem) {
   load_buffer *lb = &load_buffers[tag - 1];
   uint32_t val = data_mem_read(lb->address, lb->mem_ctrl.zero_extend,
                                lb->mem_ctrl.addressing_width, dmem);
-  printf("[LB]  tag=%u addr=0x%08x -> val=%d\n", tag, lb->address, val);
+  trace_note(TR_EXEC, "[0x%04x] → %d", lb->address, (int32_t)val);
   return val;
 }
 
@@ -54,4 +55,13 @@ bool lb_all_empty(void) {
       return false;
   }
   return true;
+}
+
+void lb_render(char *buf, size_t cap) {
+  buf[0] = '\0';
+  for (size_t i = 0; i < LB_CNT; i++) {
+    if (load_buffers[i].busy)
+      trace_appendf(buf, cap, "%sLB%zu [0x%04x]", buf[0] ? "\n" : "", i + 1,
+                    load_buffers[i].address);
+  }
 }

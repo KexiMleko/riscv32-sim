@@ -7,7 +7,7 @@
 #include "regfile/regfile.h"
 #include "stages/pipeline.h"
 #include <stdint.h>
-#include <stdio.h>
+#include "trace.h"
 
 ID_EX instr_decode(IF_ID in, branch_ctrl *b_ctrl, bool *b_flush) {
   ID_EX out = {0};
@@ -31,22 +31,27 @@ ID_EX instr_decode(IF_ID in, branch_ctrl *b_ctrl, bool *b_flush) {
     uint32_t target = in.curr_pc + imm;
     bool taken =
         eval_branch(rb_out.rs1_data, rb_out.rs2_data, get_funct3(instr));
-    printf("flush eval - param 1: %d, param 2: %d\n", in.pc,
-           (taken ? target : in.curr_pc + 4));
-    if (in.pc != (taken ? target : in.curr_pc + 4)) {
-      printf("IFID FLUSH!\n");
+    uint32_t correct_pc = taken ? target : in.curr_pc + 4;
+    bool mispredict = in.pc != correct_pc;
+    if (mispredict) {
       *b_flush = true;
+      trace_stat_flush();
     }
     b_ctrl->next_pc = target;
     b_ctrl->pc_next_sel = taken;
-    printf("Branch evaluated - %d cmp %d - %s\n", rb_out.rs1_data,
-           rb_out.rs2_data, taken ? "Taken" : "Not taken");
+    trace_note(TR_ID, "branch %s (%d vs %d)", taken ? "taken" : "not taken",
+               (int32_t)rb_out.rs1_data, (int32_t)rb_out.rs2_data);
+    if (mispredict)
+      trace_note(TR_ID, "MISPREDICT → FLUSH, PC=0x%04x", correct_pc);
+    else
+      trace_note(TR_ID, "predicted OK");
 
     record_branch_result(in.curr_pc, target, taken);
 
   } else {
     b_ctrl->pc_next_sel = false;
   }
+  out.instr = instr;
   out.imm = imm;
   out.rd_addr = rd;
   out.ctrl = ctrl;

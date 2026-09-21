@@ -4,7 +4,6 @@
 #include "common_data_bus/common_data_bus.h"
 #include "control_decoder.h"
 #include "imm_gen.h"
-#include "instr_disasm.h"
 #include "instr_fields.h"
 #include "instruction_queue/instr_queue.h"
 #include "ls_buffers/load_buffers.h"
@@ -15,7 +14,7 @@
 #include "reservation_station/reservation_station.h"
 #include <stdbool.h>
 #include <stdint.h>
-#include <stdio.h>
+#include "trace.h"
 
 bool branch_pending = false;
 
@@ -23,14 +22,11 @@ issue_result issue_instr(CDB cdb) {
   iq_entry entry = {0};
   issue_result res = {0};
   if (iq_front(&entry) != QUEUE_OK) {
-    printf("[ISSUE] instruction queue empty\n");
     return res;
   }
   uint32_t instr = entry.instr;
   uint32_t pc = entry.pc;
-  char instr_str[50];
-  instr_disasm(instr, instr_str, 50);
-  printf("[ISSUE] dequeued instr = %s\n", instr_str);
+  trace_row_instr(TR_ISSUE, instr);
   uint32_t opcode = get_opcode(instr);
   uint32_t funct3 = get_funct3(instr);
   uint32_t funct7 = get_funct7(instr);
@@ -58,8 +54,8 @@ issue_result issue_instr(CDB cdb) {
     }
 
     if (t1 || t2) {
-      printf("[ISSUE] branch stall: waiting on rs1_tag=%u rs2_tag=%u\n", t1,
-             t2);
+      trace_note(TR_ISSUE, "STALL: branch waits on #%u", t1 ? t1 : t2);
+      trace_stat_stall("branch operand");
       branch_pending = true; // keep fetch stalled, retry next cycle
       return res;            // res.valid still false -> no dequeue
     }
@@ -69,8 +65,8 @@ issue_result issue_instr(CDB cdb) {
 
     branch_pending = false;
 
-    printf("[ISSUE] branch resolved: v1=%d v2=%d funct3=%u -> %s target=0x%x\n",
-           v1, v2, funct3, taken ? "TAKEN" : "NOT TAKEN", target);
+    trace_note(TR_ISSUE, "branch %s (%d vs %d)", taken ? "taken" : "not taken",
+               (int32_t)v1, (int32_t)v2);
 
     res.b_ctrl = (branch_ctrl){.next_pc = target, .pc_next_sel = taken};
     res.valid = true;
@@ -80,26 +76,30 @@ issue_result issue_instr(CDB cdb) {
   // Computing effective address for load and store instructions
   if ((ctrl.data_mem_read_en || ctrl.data_mem_write_en) && ctrl.alu_src_imm) {
     if (regfile_read_tag(rs1)) {
-      printf("[ISSUE] stall: no data available on REG[%d]\n", rs1);
+      trace_note(TR_ISSUE, "STALL: base x%u pending", rs1);
+      trace_stat_stall("base reg pending");
       return res;
     }
     uint32_t addr = execute_alu(regfile_read_val(rs1), imm, ALU_ADD);
     if (ctrl.data_mem_read_en) {
       uint32_t lb_free_tag = lb_find_free_tag();
       if (!lb_free_tag) {
-        printf("[ISSUE] stall: no free load buffer\n");
+        trace_note(TR_ISSUE, "STALL: no free LB");
+        trace_stat_stall("no free LB");
         return res;
       }
       load_buffer lb = (load_buffer){
           .address = addr, .busy = true, .mem_ctrl = ctrl.mem_addressing_ctrl};
       res = (issue_result){
           .ctrl = ctrl, .lb = lb, .rd = rd, .tag = lb_free_tag, .valid = true};
+      trace_note(TR_ISSUE, "→ LB%u", lb_free_tag);
       return res;
     }
     if (ctrl.data_mem_write_en) {
       uint32_t sb_free_tag = sb_find_free_tag();
       if (!sb_free_tag) {
-        printf("[ISSUE] stall: no free store buffer\n");
+        trace_note(TR_ISSUE, "STALL: no free SB");
+        trace_stat_stall("no free SB");
         return res;
       }
       store_buffer sb = (store_buffer){.address = addr,
@@ -108,13 +108,15 @@ issue_result issue_instr(CDB cdb) {
                                        .write_value = rd};
       res = (issue_result){
           .ctrl = ctrl, .sb = sb, .tag = sb_free_tag, .valid = true};
+      trace_note(TR_ISSUE, "→ SB%u", sb_free_tag);
       return res;
     }
   }
 
   uint32_t rs_free_tag = rs_find_free_tag();
   if (!rs_free_tag) {
-    printf("[ISSUE] stall: no free reservation station\n");
+    trace_note(TR_ISSUE, "STALL: no free RS");
+    trace_stat_stall("no free RS");
     return res;
   }
   reservation_station rs = {0};
@@ -152,9 +154,6 @@ issue_result issue_instr(CDB cdb) {
   res.rd = rd;
   res.tag = rs_free_tag;
 
-  printf("[ISSUE] -> RS[%u] op=0x%02x rd=x%u rs1_tag=%u rs1_val=%d "
-         "rs2_tag=%u rs2_val=%d\n",
-         rs_free_tag, rs.op, rd, rs.rs1_tag, rs.rs1_val, rs.rs2_tag,
-         rs.rs2_val);
+  trace_note(TR_ISSUE, "→ RS%u", rs_free_tag);
   return res;
 }

@@ -8,6 +8,8 @@
 #include "pipe_regs.h"
 #include "pipeline.h"
 #include "pipeline_interface.h"
+#include "regfile/regfile.h"
+#include "trace.h"
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,6 +26,7 @@ bool run_inorder_pipeline(int32_t PC, instr_memory *instr_mem,
   branch_ctrl b_ctrl = {.next_pc = 0, .pc_next_sel = false};
   halt_signal halt = false;
 
+  trace_init(TRACE_INORDER);
   printf("\nPress Enter to cycle...\n");
   while (!halt) {
     clk_cnt++;
@@ -38,6 +41,10 @@ bool run_inorder_pipeline(int32_t PC, instr_memory *instr_mem,
       printf("\nMax clock cycle count reached: Stopping simulation\n");
       return EXIT_FAILURE;
     }
+
+    trace_begin_cycle(clk_cnt, if_id_reg.halt_signal        ? TRACE_NO_PC
+                               : if_id_reg.b_ctrl.pc_next_sel ? if_id_reg.b_ctrl.next_pc
+                                                              : (uint32_t)PC);
 
     control_signals id_ctrl_peek = get_control_signals(
         get_opcode(if_id_reg.instr), get_funct3(if_id_reg.instr),
@@ -74,6 +81,17 @@ bool run_inorder_pipeline(int32_t PC, instr_memory *instr_mem,
     const MEM_WB mem_wb_next = memory_access(ex_mem_reg, data_mem);
     halt = write_back(mem_wb_reg);
 
+    trace_row_instr(TR_IF, if_id_next.instr);
+    trace_row_instr(TR_ID, if_id_reg.instr);
+    trace_row_instr(TR_EX, id_ex_reg.instr);
+    trace_row_instr(TR_MEM, ex_mem_reg.instr);
+    trace_row_instr(TR_WB, mem_wb_reg.instr);
+    if (!hd.pc_en) {
+      trace_note(TR_ID, "STALL load-use (x%u)", id_ex_reg.rd_addr);
+      trace_note(TR_IF, "held");
+      trace_stat_stall("load-use");
+    }
+
     /*
      * "Register" writes are performed after instruction stages to simulate
      * sequential logic
@@ -96,8 +114,12 @@ bool run_inorder_pipeline(int32_t PC, instr_memory *instr_mem,
     if (hd.pc_en) {
       PC = if_id_reg.pc;
     }
-    printf("-----------------------------\n");
+    trace_end_cycle();
   }
-  printf("Cycle count: %lu\n", clk_cnt);
+
+  char regs[512], mem[512];
+  regfile_render(regs, sizeof(regs));
+  data_mem_render(data_mem, mem, sizeof(mem));
+  trace_summary(clk_cnt, regs, mem);
   return EXIT_SUCCESS;
 }

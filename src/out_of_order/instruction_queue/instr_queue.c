@@ -3,6 +3,8 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
+#include "instr_disasm.h"
+#include "trace.h"
 
 #define MAX_QUEUE_SIZE 8
 iq_entry instr_queue[MAX_QUEUE_SIZE];
@@ -17,7 +19,6 @@ queue_status enqueue_instr(uint32_t instr, uint32_t pc) {
   }
   instr_queue[size] = (iq_entry){.instr = instr, .pc = pc};
   size++;
-  printf("instructions queued: %u", size);
   return QUEUE_OK;
 }
 queue_status iq_front(iq_entry *out) {
@@ -43,4 +44,13 @@ void iq_flush() {
     instr_queue[i] = (iq_entry){0};
   }
   size = 0;
+}
+
+void iq_render(char *buf, size_t cap) {
+  buf[0] = '\0';
+  for (size_t i = 0; i < size; i++) {
+    char str[50];
+    instr_disasm(instr_queue[i].instr, str, sizeof(str));
+    trace_appendf(buf, cap, "%s%s", i ? " | " : "", str);
+  }
 }

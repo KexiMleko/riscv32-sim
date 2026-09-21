@@ -5,16 +5,15 @@
 #include "ls_buffers/store_buffers.h"
 #include "regfile/tomasulo_regfile.h"
 #include "reservation_station/reservation_station.h"
-#include <stdio.h>
+#include "trace.h"
 
 halt_signal write_result(CDB cdb, bool halt_pending) {
   halt_signal halt = halt_pending && iq_is_empty() && rs_all_empty() && lb_all_empty() && sb_all_empty();
   if (!cdb.valid) {
-    printf("[WB] CDB idle\n");
     return halt;
   }
 
-  printf("[WB] CDB broadcast: tag=%u value=%d\n", cdb.tag, cdb.value);
+  trace_row(TR_CDB, "#%u = %d", cdb.tag, cdb.value);
   regfile_cdb_snoop(cdb);
   rs_snoop_cdb(cdb);
   return halt;

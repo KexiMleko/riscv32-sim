@@ -63,6 +63,10 @@ void instr_disasm(uint32_t instr, char *out, size_t len) {
     break;
   }
   case OPCODE_OP_IMM: {
+    if (instr == 0x00000013) {
+      snprintf(out, len, "nop");
+      break;
+    }
     int32_t imm = get_i_imm(instr);
     const char *mn = (funct3 == 0x0)                     ? "addi"
                      : (funct3 == 0x2)                   ? "slti"
