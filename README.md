@@ -56,6 +56,22 @@ Execute the binary from the project root using the following syntax:
 ./build/rvsim tests/data/bin/add1.bin
 ```
 
+### Options
+
+All options are optional.
+
+| Option | Description | Default |
+| --- | --- | --- |
+| `-m`, `--mode` | Execution model: `in_order` (5-stage pipeline) or `ooo` (Tomasulo out-of-order pipeline) | `in_order` |
+| `-i`, `--imem-size` | Instruction memory size, in 32-bit words | 4096 |
+| `-d`, `--dmem-size` | Data memory size, in 32-bit words | 4096 |
+
+**Example (Tomasulo out-of-order, with larger memories):**
+
+```bash
+./build/rvsim tests/data/src/branch.s --mode=ooo --imem-size=8192 --dmem-size=8192
+```
+
 ### Toolchain Requirements
 
 To process assembly files, the simulator requires a RISC-V cross-compiler available in your system path. The internal logic automatically selects the appropriate commands based on your OS:
@@ -71,6 +87,12 @@ To run a specific assembly test case, use the `TSRC` (test source) variable with
 
 ```bash
 make test TSRC=branch.s
+```
+
+**Example (out-of-order / Tomasulo):**
+
+```bash
+make test-ooo TSRC=branch.s
 ```
 
 **Note on Verification:**
